@@ -3,221 +3,212 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FPV Flight Log</title>
+<title>Gambit FPV Flight Log</title>
+
 <style>
 body {
+  margin:0;
   font-family: Arial, sans-serif;
-  background: #111;
-  color: #fff;
-  padding: 10px;
-  margin: 0;
+  background:#0e1117;
+  color:white;
 }
 
-h1 {
-  text-align: center;
+/* BACKGROUND WATERMARK */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:url('logo.png') center center no-repeat;
+  background-size:70%;
+  opacity:0.04;
+  pointer-events:none;
 }
 
-.card {
-  background: #222;
-  padding: 15px;
-  margin-bottom: 12px;
-  border-radius: 10px;
+/* HEADER */
+.header{
+  text-align:center;
+  padding:20px 10px;
 }
 
-input, select, button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 8px;
-  border: none;
-  box-sizing: border-box;
+.header img{
+  width:160px;
+  border-radius:12px;
+  box-shadow:0 0 20px rgba(255,255,255,0.1);
 }
 
-button {
-  background: yellow;
-  color: black;
-  font-weight: bold;
-  cursor: pointer;
+.header h1{
+  margin:10px 0 0;
+  font-size:26px;
+  letter-spacing:1px;
 }
 
-details summary {
-  cursor: pointer;
-  font-weight: bold;
-  padding: 4px 0;
+/* CARDS */
+.card{
+  background:#1c1f26;
+  margin:10px;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.6);
 }
 
-.history-item {
-  background: #2d2d2d;
-  padding: 10px;
-  border-radius: 8px;
-  margin-top: 10px;
+/* INPUTS */
+input, select, button{
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
 }
 
-.small {
-  color: #ccc;
-  font-size: 14px;
+button{
+  background:#f5c400;
+  font-weight:bold;
+}
+
+/* HISTORY */
+.history-item{
+  background:#2a2f38;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+}
+
+.small{
+  color:#aaa;
+  font-size:13px;
 }
 </style>
 </head>
+
 <body>
 
-<h1>FPV Flight Log</h1>
-
-<div class="card">
-  <label>Drone</label>
-  <select id="drone">
-    <option>3" Toothpick</option>
-    <option>75mm Whoop</option>
-    <option>5" Pirat Punch</option>
-    <option>7" Long Range</option>
-    <option>10" Freestyle</option>
-    <option>13" Freestyle</option>
-  </select>
-
-  <label>Duration (minutes)</label>
-  <input id="duration" type="number" step="0.1">
-
-  <label>Location</label>
-  <select id="location">
-    <option>Home</option>
-    <option>Flying Spot</option>
-    <option>Closed Office Building</option>
-    <option>Open Area</option>
-    <option>Treed Area</option>
-  </select>
-
-  <label>Date / Time</label>
-  <input id="date" type="datetime-local">
-
-  <button onclick="saveFlight()">Save Flight</button>
+<div class="header">
+  <img src="logo.png">
+  <h1>GAMBIT FPV</h1>
 </div>
 
 <div class="card">
-  <b>Total Flights:</b> <span id="totalFlights">0</span><br>
-  <b>Total Hours:</b> <span id="totalHours">0.00</span>
+<label>Drone</label>
+<select id="drone">
+<option>3" Toothpick</option>
+<option>75mm Whoop</option>
+<option>5" Pirat Punch</option>
+<option>7" Long Range</option>
+<option>10" Freestyle</option>
+<option>13" Freestyle</option>
+</select>
+
+<label>Duration (minutes)</label>
+<input id="duration" type="number">
+
+<label>Location</label>
+<select id="location">
+<option>Home</option>
+<option>Flying Spot</option>
+<option>Closed Office Building</option>
+<option>Open Area</option>
+<option>Treed Area</option>
+</select>
+
+<label>Date</label>
+<input id="date" type="datetime-local">
+
+<button onclick="saveFlight()">Save Flight</button>
 </div>
 
 <div class="card">
-  <details>
-    <summary>Flight History</summary>
-    <div id="history"></div>
-  </details>
+<b>Total Flights:</b> <span id="totalFlights">0</span><br>
+<b>Total Hours:</b> <span id="totalHours">0</span>
 </div>
 
 <div class="card">
-  <button onclick="exportData()">Export Logs</button>
-  <button onclick="importData()">Import Logs</button>
-  <button onclick="backup()">Download Backup</button>
+<details>
+<summary>Flight History</summary>
+<div id="history"></div>
+</details>
+</div>
+
+<div class="card">
+<button onclick="exportData()">Export Logs</button>
 </div>
 
 <script>
+
 let logs = JSON.parse(localStorage.getItem("fpvLogs")) || [];
 
-function saveLogs() {
-  localStorage.setItem("fpvLogs", JSON.stringify(logs));
-}
+function saveFlight(){
+  let drone = document.getElementById("drone").value;
+  let minutes = parseFloat(document.getElementById("duration").value);
+  let location = document.getElementById("location").value;
+  let date = document.getElementById("date").value;
 
-function saveFlight() {
-  const drone = document.getElementById("drone").value;
-  const minutes = parseFloat(document.getElementById("duration").value);
-  const location = document.getElementById("location").value;
-  const date = document.getElementById("date").value;
-
-  if (!drone || !minutes || !location || !date) {
+  if(!drone || !minutes || !location || !date){
     alert("Fill everything");
     return;
   }
 
-  const hours = minutes / 60;
+  let hours = minutes / 60;
 
   logs.unshift({
     drone,
-    minutes: minutes,
-    duration: hours,
+    minutes,
+    duration:hours,
     location,
     date
   });
 
-  saveLogs();
-  document.getElementById("duration").value = "";
+  localStorage.setItem("fpvLogs", JSON.stringify(logs));
+
+  checkBackupReminder();
   update();
 }
 
-function update() {
+function update(){
   document.getElementById("totalFlights").innerText = logs.length;
 
-  const totalHours = logs.reduce((sum, l) => sum + Number(l.duration || 0), 0);
-  document.getElementById("totalHours").innerText = totalHours.toFixed(2);
+  let total = logs.reduce((sum,l)=> sum + Number(l.duration),0);
+  document.getElementById("totalHours").innerText = total.toFixed(2);
 
-  const history = document.getElementById("history");
-
-  if (logs.length === 0) {
-    history.innerHTML = '<div class="small" style="margin-top:10px;">No flights saved yet.</div>';
-    return;
-  }
-
-  let html = "";
-  logs.forEach((l) => {
-    const minutesText = l.minutes ? Number(l.minutes).toFixed(1) : (Number(l.duration) * 60).toFixed(1);
-    const hoursText = Number(l.duration || 0).toFixed(2);
-
+  let html="";
+  logs.forEach(l=>{
     html += `
-      <div class="history-item">
-        <div><b>${l.drone}</b></div>
-        <div>${minutesText} min (${hoursText} hr)</div>
-        <div>${l.location}</div>
-        <div class="small">${l.date}</div>
-      </div>
-    `;
+    <div class="history-item">
+      <b>${l.drone}</b><br>
+      ${l.minutes} min (${l.duration.toFixed(2)} hr)<br>
+      ${l.location}<br>
+      <div class="small">${l.date}</div>
+    </div>`;
   });
 
-  history.innerHTML = html;
+  document.getElementById("history").innerHTML = html;
 }
 
-function exportData() {
-  const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
+/* EXPORT */
+function exportData(){
+  let blob = new Blob([JSON.stringify(logs)], {type:"application/json"});
+  let a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "fpv-log.json";
   a.click();
+
+  localStorage.setItem("lastBackup", Date.now());
 }
 
-function importData() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".json,application/json";
+/* BACKUP REMINDER */
+function checkBackupReminder(){
+  let last = localStorage.getItem("lastBackup");
+  if(!last) return;
 
-  input.onchange = e => {
-    const file = e.target.files[0];
-    if (!file) return;
+  let days = (Date.now() - last) / (1000*60*60*24);
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const imported = JSON.parse(reader.result);
-        if (!Array.isArray(imported)) {
-          alert("Invalid backup file");
-          return;
-        }
-
-        logs = imported;
-        saveLogs();
-        update();
-      } catch (err) {
-        alert("Could not import file");
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  input.click();
-}
-
-function backup() {
-  exportData();
+  if(days > 7){
+    alert("⚠️ Backup your logs!");
+  }
 }
 
 update();
+
 </script>
 
 </body>
