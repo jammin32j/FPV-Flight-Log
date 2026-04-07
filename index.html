@@ -1,521 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#facc15" />
-  <title>FPV Flight Log</title>
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --accent: #facc15;
-      --accent-dark: #eab308;
-      --danger: #dc2626;
-      --border: #e2e8f0;
-      --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
-      --radius: 22px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FPV Flight Log</title>
 
-    * { box-sizing: border-box; }
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #fff;
+  padding: 10px;
+}
 
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom) 14px;
-    }
+h1 { text-align: center; }
 
-    .wrap {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 14px 0 32px;
-    }
+.card {
+  background: #222;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+}
 
-    .hero, .card {
-      background: var(--card);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-    }
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: none;
+}
 
-    .hero {
-      background: linear-gradient(135deg, #fde047, #facc15, #f59e0b);
-      padding: 20px;
-      margin-bottom: 14px;
-    }
+button {
+  background: yellow;
+  color: black;
+  font-weight: bold;
+}
 
-    h1 {
-      margin: 0 0 6px;
-      font-size: 32px;
-      line-height: 1.05;
-    }
+.history {
+  margin-top: 10px;
+}
 
-    .sub {
-      margin: 0;
-      color: rgba(15, 23, 42, 0.78);
-      font-size: 15px;
-    }
-
-    .grid {
-      display: grid;
-      gap: 14px;
-    }
-
-    .stats {
-      grid-template-columns: repeat(2, 1fr);
-      margin-bottom: 14px;
-    }
-
-    .card {
-      padding: 16px;
-      margin-bottom: 14px;
-    }
-
-    .stat-label {
-      color: var(--muted);
-      font-size: 14px;
-      margin-bottom: 6px;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: 800;
-    }
-
-    .section-title {
-      font-size: 22px;
-      margin: 0 0 14px;
-    }
-
-    .field {
-      margin-bottom: 14px;
-    }
-
-    label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 8px;
-      font-size: 15px;
-    }
-
-    input, select, button {
-      width: 100%;
-      min-height: 52px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 0 16px;
-      font-size: 17px;
-      background: #fff;
-    }
-
-    button {
-      border: none;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .primary {
-      background: var(--accent);
-      color: #111827;
-    }
-
-    .primary:active { background: var(--accent-dark); }
-
-    .secondary {
-      background: #fff;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-
-    .danger {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .row {
-      display: grid;
-      gap: 10px;
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .history-item {
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 14px;
-      margin-bottom: 12px;
-      background: #fff;
-    }
-
-    .history-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: start;
-    }
-
-    .history-name {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-
-    .history-meta, .history-time {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .mini-actions {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .mini-actions button {
-      width: auto;
-      min-height: 42px;
-      padding: 0 14px;
-      font-size: 14px;
-      border-radius: 16px;
-    }
-
-    .hint {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.4;
-      margin-top: 8px;
-    }
-
-    .empty {
-      text-align: center;
-      color: var(--muted);
-      padding: 24px 12px;
-      border: 2px dashed var(--border);
-      border-radius: 24px;
-    }
-
-    @media (max-width: 520px) {
-      .row { grid-template-columns: 1fr; }
-      h1 { font-size: 28px; }
-      .section-title { font-size: 20px; }
-    }
-  </style>
+</style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div class="hero">
-      <h1>FPV Flight Log</h1>
-      <p class="sub">Simple iPhone flight logger for drone, duration, location, and date/time.</p>
-    </div>
 
-    <div class="grid stats">
-      <div class="card">
-        <div class="stat-label">Total Flights</div>
-        <div class="stat-value" id="totalFlights">0</div>
-      </div>
-      <div class="card">
-        <div class="stat-label">Total Minutes</div>
-        <div class="stat-value" id="totalMinutes">0.0</div>
-      </div>
-    </div>
+<h1>FPV Flight Log</h1>
 
-    <div class="card">
-      <h2 class="section-title" id="formTitle">Add Flight</h2>
+<div class="card">
+<label>Drone</label>
+<select id="drone">
+<option>3" Toothpick</option>
+<option>75mm Whoop</option>
+<option>5" Pirat Punch</option>
+<option>7" Long Range</option>
+<option>10" Freestyle</option>
+<option>13" Freestyle</option>
+</select>
 
-      <div class="field">
-        <label for="drone">Drone</label>
-        <select id="drone"></select>
-      </div>
+<label>Duration (hours)</label>
+<input id="duration" type="number" step="0.1">
 
-      <div class="field">
-        <label for="duration">Duration (minutes)</label>
-        <input id="duration" type="number" inputmode="decimal" step="0.1" placeholder="5.0" />
-      </div>
+<label>Location</label>
+<select id="location">
+<option>Home</option>
+<option>Flying Spot</option>
+<option>Closed Office Building</option>
+<option>Open Area</option>
+<option>Treed Area</option>
+</select>
 
-      <div class="field">
-        <label for="location">Location</label>
-        <select id="location"></select>
-      </div>
+<label>Date / Time</label>
+<input id="date" type="datetime-local">
 
-      <div class="field">
-        <label for="dateTime">Date and Time</label>
-        <input id="dateTime" type="datetime-local" />
-      </div>
+<button onclick="saveFlight()">Save Flight</button>
+</div>
 
-      <div class="row">
-        <button class="primary" id="saveBtn">Save Flight</button>
-        <button class="secondary" id="cancelBtn" style="display:none;">Cancel</button>
-      </div>
+<div class="card">
+<b>Total Flights:</b> <span id="totalFlights">0</span><br>
+<b>Total Hours:</b> <span id="totalHours">0</span>
+</div>
 
-      <p class="hint">After you host this file online, open it in Safari on your iPhone and tap Share → Add to Home Screen.</p>
-    </div>
+<div class="card">
+<button onclick="toggleHistory()">Flight History ▼</button>
+<div id="history" class="history" style="display:none;"></div>
+</div>
 
-    <div class="card">
-      <div class="row" style="margin-bottom:12px;">
-        <button class="secondary" id="exportBtn">Export Logs</button>
-        <label class="secondary" style="display:flex;align-items:center;justify-content:center;cursor:pointer;">
-          Import Logs
-          <input id="importInput" type="file" accept="application/json" style="display:none;" />
-        </label>
-      </div>
-      <button class="danger" id="clearBtn">Clear All Logs</button>
-    </div>
+<div class="card">
+<button onclick="exportData()">Export Logs</button>
+<button onclick="importData()">Import Logs</button>
+<button onclick="backup()">Download Backup</button>
+</div>
 
-    <div class="card">
-      <h2 class="section-title">Flight History</h2>
-      <div id="history"></div>
-    </div>
-  </div>
+<script>
 
-  <script>
-    const STORAGE_KEY = "fpv-simple-flight-log-single-file-v1";
+let logs = JSON.parse(localStorage.getItem("fpvLogs")) || [];
 
-    const DRONES = [
-      { name: '3" Toothpick', locations: ["Home"] },
-      { name: "75mm Whoop", locations: ["Home"] },
-      { name: '5" Pirat Punch', locations: ["Flying Spot", "Closed Office Building"] },
-      { name: '7" Long Range', locations: ["Open Area", "Treed Area"] },
-      { name: '10" Freestyle', locations: ["Open Area", "Treed Area"] },
-      { name: '13" Freestyle', locations: ["Open Area", "Treed Area"] },
-    ];
+function saveFlight(){
+  let drone = document.getElementById("drone").value;
+  let duration = parseFloat(document.getElementById("duration").value);
+  let location = document.getElementById("location").value;
+  let date = document.getElementById("date").value;
 
-    const droneMap = Object.fromEntries(DRONES.map(d => [d.name, d]));
+  if(!drone || !duration || !location || !date){
+    alert("Fill everything");
+    return;
+  }
 
-    let logs = [];
-    let editingId = null;
+  logs.unshift({drone, duration, location, date});
+  localStorage.setItem("fpvLogs", JSON.stringify(logs));
 
-    const droneEl = document.getElementById("drone");
-    const durationEl = document.getElementById("duration");
-    const locationEl = document.getElementById("location");
-    const dateTimeEl = document.getElementById("dateTime");
-    const saveBtn = document.getElementById("saveBtn");
-    const cancelBtn = document.getElementById("cancelBtn");
-    const historyEl = document.getElementById("history");
-    const totalFlightsEl = document.getElementById("totalFlights");
-    const totalMinutesEl = document.getElementById("totalMinutes");
-    const formTitleEl = document.getElementById("formTitle");
-    const exportBtn = document.getElementById("exportBtn");
-    const importInput = document.getElementById("importInput");
-    const clearBtn = document.getElementById("clearBtn");
+  update();
+}
 
-    function nowLocalDateTime() {
-      const d = new Date();
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      const hour = String(d.getHours()).padStart(2, "0");
-      const minute = String(d.getMinutes()).padStart(2, "0");
-      return `${year}-${month}-${day}T${hour}:${minute}`;
-    }
+function update(){
+  document.getElementById("totalFlights").innerText = logs.length;
 
-    function loadLogs() {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        logs = saved ? JSON.parse(saved) : [];
-        if (!Array.isArray(logs)) logs = [];
-      } catch {
-        logs = [];
-      }
-    }
+  let hours = logs.reduce((sum,l)=> sum + Number(l.duration),0);
+  document.getElementById("totalHours").innerText = hours.toFixed(1);
 
-    function saveLogs() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-    }
+  let html = "";
+  logs.forEach(l=>{
+    html += `<div>
+      <b>${l.drone}</b><br>
+      ${l.duration} hr - ${l.location}<br>
+      ${l.date}<hr>
+    </div>`;
+  });
 
-    function populateDrones() {
-      droneEl.innerHTML = "";
-      DRONES.forEach(drone => {
-        const option = document.createElement("option");
-        option.value = drone.name;
-        option.textContent = drone.name;
-        droneEl.appendChild(option);
-      });
-    }
+  document.getElementById("history").innerHTML = html;
+}
 
-    function populateLocations(droneName, selectedLocation) {
-      const drone = droneMap[droneName] || DRONES[0];
-      locationEl.innerHTML = "";
-      drone.locations.forEach(location => {
-        const option = document.createElement("option");
-        option.value = location;
-        option.textContent = location;
-        locationEl.appendChild(option);
-      });
-      locationEl.value = selectedLocation && drone.locations.includes(selectedLocation)
-        ? selectedLocation
-        : drone.locations[0];
-    }
+function toggleHistory(){
+  let h = document.getElementById("history");
+  h.style.display = h.style.display === "none" ? "block" : "none";
+}
 
-    function resetForm() {
-      editingId = null;
-      formTitleEl.textContent = "Add Flight";
-      saveBtn.textContent = "Save Flight";
-      cancelBtn.style.display = "none";
-      droneEl.value = DRONES[0].name;
-      populateLocations(DRONES[0].name);
-      durationEl.value = "";
-      dateTimeEl.value = nowLocalDateTime();
-    }
+function exportData(){
+  let blob = new Blob([JSON.stringify(logs)], {type:"application/json"});
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "fpv-log.json";
+  a.click();
+}
 
-    function updateStats() {
-      const totalFlights = logs.length;
-      const totalMinutes = logs.reduce((sum, log) => sum + (parseFloat(log.duration) || 0), 0);
-      totalFlightsEl.textContent = totalFlights;
-      totalMinutesEl.textContent = totalMinutes.toFixed(1);
-    }
+function importData(){
+  let input = document.createElement("input");
+  input.type = "file";
+  input.onchange = e=>{
+    let file = e.target.files[0];
+    let reader = new FileReader();
+    reader.onload = ()=>{
+      logs = JSON.parse(reader.result);
+      localStorage.setItem("fpvLogs", JSON.stringify(logs));
+      update();
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
 
-    function renderHistory() {
-      historyEl.innerHTML = "";
+function backup(){
+  exportData();
+}
 
-      if (!logs.length) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = "No flights logged yet.";
-        historyEl.appendChild(empty);
-        return;
-      }
+update();
 
-      const sorted = [...logs].sort((a, b) => a.dateTime < b.dateTime ? 1 : -1);
+</script>
 
-      sorted.forEach(log => {
-        const item = document.createElement("div");
-        item.className = "history-item";
-
-        item.innerHTML = `
-          <div class="history-top">
-            <div>
-              <div class="history-name"></div>
-              <div class="history-meta"></div>
-              <div class="history-time"></div>
-            </div>
-            <div class="mini-actions">
-              <button class="secondary edit-btn">Edit</button>
-              <button class="danger delete-btn">Delete</button>
-            </div>
-          </div>
-        `;
-
-        item.querySelector(".history-name").textContent = log.drone;
-        item.querySelector(".history-meta").textContent = `${log.duration} min · ${log.location}`;
-        item.querySelector(".history-time").textContent = (log.dateTime || "").replace("T", " ");
-
-        item.querySelector(".edit-btn").addEventListener("click", () => {
-          editingId = log.id;
-          formTitleEl.textContent = "Edit Flight";
-          saveBtn.textContent = "Save Changes";
-          cancelBtn.style.display = "block";
-          droneEl.value = log.drone;
-          populateLocations(log.drone, log.location);
-          durationEl.value = log.duration;
-          dateTimeEl.value = log.dateTime;
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        });
-
-        item.querySelector(".delete-btn").addEventListener("click", () => {
-          logs = logs.filter(x => x.id !== log.id);
-          saveLogs();
-          updateStats();
-          renderHistory();
-          if (editingId === log.id) resetForm();
-        });
-
-        historyEl.appendChild(item);
-      });
-    }
-
-    function makeId() {
-      return Math.random().toString(36).slice(2) + Date.now().toString(36);
-    }
-
-    droneEl.addEventListener("change", () => {
-      populateLocations(droneEl.value);
-    });
-
-    saveBtn.addEventListener("click", () => {
-      const drone = droneEl.value;
-      const duration = durationEl.value.trim();
-      const location = locationEl.value;
-      const dateTime = dateTimeEl.value;
-
-      if (!drone || !duration || !location || !dateTime) {
-        alert("Please fill in all four fields.");
-        return;
-      }
-
-      const flight = {
-        id: editingId || makeId(),
-        drone,
-        duration,
-        location,
-        dateTime,
-      };
-
-      if (editingId) {
-        logs = logs.map(log => log.id === editingId ? flight : log);
-      } else {
-        logs.unshift(flight);
-      }
-
-      saveLogs();
-      updateStats();
-      renderHistory();
-      resetForm();
-    });
-
-    cancelBtn.addEventListener("click", () => {
-      resetForm();
-    });
-
-    exportBtn.addEventListener("click", () => {
-      const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "fpv-flight-log.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    importInput.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const imported = JSON.parse(reader.result);
-          if (!Array.isArray(imported)) throw new Error();
-          logs = imported;
-          saveLogs();
-          updateStats();
-          renderHistory();
-          resetForm();
-        } catch {
-          alert("That file could not be imported.");
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = "";
-    });
-
-    clearBtn.addEventListener("click", () => {
-      if (confirm("Delete all saved logs?")) {
-        logs = [];
-        saveLogs();
-        updateStats();
-        renderHistory();
-        resetForm();
-      }
-    });
-
-    populateDrones();
-    loadLogs();
-    updateStats();
-    renderHistory();
-    resetForm();
-  </script>
 </body>
 </html>
