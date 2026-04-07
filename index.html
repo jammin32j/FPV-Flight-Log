@@ -2,174 +2,385 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Gambit FPV Flight Log</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0e1117;
-  color: white;
+:root{
+  --bg:#0b1018;
+  --bg2:#111826;
+  --card:rgba(24,30,42,.9);
+  --card2:rgba(35,43,58,.95);
+  --text:#f5f7fb;
+  --muted:#aab3c2;
+  --gold:#f5c400;
+  --gold2:#ffdf5e;
+  --line:rgba(255,255,255,.08);
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+  --danger:#c62828;
+  --secondary:#30394a;
+  --radius:18px;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: url('logo.png') center center no-repeat;
-  background-size: 70%;
-  opacity: 0.04;
-  pointer-events: none;
+* { box-sizing:border-box; }
+
+html, body {
+  margin:0;
+  padding:0;
+  background:
+    radial-gradient(circle at top right, rgba(245,196,0,.12), transparent 22%),
+    linear-gradient(180deg, var(--bg2), var(--bg));
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  min-height:100%;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:url('logo.png') center center no-repeat;
+  background-size:72%;
+  opacity:.035;
+  pointer-events:none;
+  filter:grayscale(.1);
+}
+
+.app {
+  max-width:760px;
+  margin:0 auto;
+  padding:16px 12px 28px;
 }
 
 .header {
-  text-align: center;
-  padding: 20px 10px;
+  text-align:center;
+  padding:12px 8px 18px;
 }
 
-.header img {
-  width: 160px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(255,255,255,0.1);
+.logo-wrap{
+  width:120px;
+  height:120px;
+  margin:0 auto 14px;
+  border-radius:26px;
+  padding:8px;
+  background:linear-gradient(145deg, rgba(245,196,0,.28), rgba(255,255,255,.05));
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 0 30px rgba(245,196,0,.08), inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter:blur(10px);
 }
 
-.header h1 {
-  margin: 10px 0 0;
-  font-size: 26px;
-  letter-spacing: 1px;
+.header img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:20px;
+  display:block;
 }
 
-.card {
-  background: #1c1f26;
-  margin: 10px;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+.header h1{
+  margin:0;
+  font-size:30px;
+  letter-spacing:.06em;
+  font-weight:900;
 }
 
-input, select, button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 6px;
-  border-radius: 8px;
-  border: none;
-  font-size: 16px;
-  box-sizing: border-box;
+.header p{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:14px;
 }
 
-button {
-  background: #f5c400;
-  font-weight: bold;
-  cursor: pointer;
-  margin-bottom: 8px;
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(12px);
 }
 
-.history-item {
-  background: #2a2f38;
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 8px;
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
 }
 
-.small {
-  color: #aaa;
-  font-size: 13px;
+.stat-card{
+  background:var(--card2);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:14px;
 }
 
-.field-group {
-  margin-bottom: 14px;
+.stat-label{
+  color:var(--muted);
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-bottom:8px;
 }
 
-.toggle-btn {
-  background: #343a46;
-  color: white;
-  margin-top: 8px;
+.stat-value{
+  font-size:28px;
+  font-weight:900;
+  line-height:1;
 }
 
-#historyWrap {
-  display: none;
-  margin-top: 10px;
+.field-group{
+  margin-bottom:14px;
 }
 
-#historyWrap.open {
-  display: block;
+label{
+  display:block;
+  margin-bottom:8px;
+  font-size:14px;
+  font-weight:700;
+  color:#eef2f8;
+}
+
+input, select, button{
+  width:100%;
+  min-height:52px;
+  border:none;
+  outline:none;
+  border-radius:16px;
+  font-size:16px;
+}
+
+input, select{
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  padding:0 14px;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+input::placeholder{
+  color:#97a2b4;
+}
+
+input:focus, select:focus{
+  border:1px solid rgba(245,196,0,.6);
+  box-shadow:0 0 0 3px rgba(245,196,0,.18);
+}
+
+button{
+  cursor:pointer;
+  font-weight:800;
+  transition:.18s ease;
+  letter-spacing:.01em;
+}
+
+button:active{
+  transform:scale(.99);
+}
+
+.primary-btn{
+  background:linear-gradient(180deg, var(--gold2), var(--gold));
+  color:#131313;
+  box-shadow:0 6px 18px rgba(245,196,0,.22);
+}
+
+.secondary-btn{
+  background:var(--secondary);
+  color:#fff;
+}
+
+.danger-btn{
+  background:linear-gradient(180deg, #d63a3a, var(--danger));
+  color:#fff;
+}
+
+.button-stack button{
+  margin-bottom:10px;
+}
+
+.button-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.toggle-btn{
+  background:var(--secondary);
+  color:#fff;
+  margin:0;
+}
+
+#historyWrap{
+  display:none;
+  margin-top:12px;
+}
+
+#historyWrap.open{
+  display:block;
+}
+
+.history-item{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:18px;
+  padding:12px;
+  margin-top:10px;
+}
+
+.history-top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:flex-start;
+}
+
+.history-drone{
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:4px;
+}
+
+.history-meta{
+  color:#e5e9f0;
+  line-height:1.45;
+}
+
+.small{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.action-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+
+.status-text{
+  color:var(--gold2);
+  font-size:14px;
+  margin-top:8px;
+  font-weight:700;
+}
+
+.section-title{
+  font-size:20px;
+  font-weight:900;
+  margin:0 0 12px;
+}
+
+@media (max-width:560px){
+  .stats, .button-row, .action-row{
+    grid-template-columns:1fr;
+  }
+  .logo-wrap{
+    width:104px;
+    height:104px;
+  }
+  .header h1{
+    font-size:26px;
+  }
 }
 </style>
 </head>
-
 <body>
 
-<div class="header">
-  <img src="logo.png" alt="Gambit FPV Logo">
-  <h1>GAMBIT FPV</h1>
-</div>
+<div class="app">
 
-<div class="card">
-  <div class="field-group">
-    <label>Drone</label>
-    <select id="droneSelect">
-      <option value='3" Toothpick'>3" Toothpick</option>
-      <option value="75mm Whoop">75mm Whoop</option>
-      <option value='5" Pirat Punch'>5" Pirat Punch</option>
-      <option value='7" Long Range'>7" Long Range</option>
-      <option value='10" Freestyle'>10" Freestyle</option>
-      <option value='13" Freestyle'>13" Freestyle</option>
-      <option value="__custom__">Custom drone...</option>
-    </select>
-    <input id="customDrone" type="text" placeholder="Type custom drone" style="display:none;">
+  <div class="header">
+    <div class="logo-wrap">
+      <img src="logo.png" alt="Gambit FPV Logo">
+    </div>
+    <h1>GAMBIT FPV</h1>
+    <p>Flight Log</p>
   </div>
 
-  <div class="field-group">
-    <label>Duration (minutes)</label>
-    <input id="duration" type="number" step="0.1">
+  <div class="card">
+    <div class="section-title">Add Flight</div>
+
+    <div class="field-group">
+      <label>Drone</label>
+      <select id="droneSelect">
+        <option value='3" Toothpick'>3" Toothpick</option>
+        <option value="75mm Whoop">75mm Whoop</option>
+        <option value='5" Pirat Punch'>5" Pirat Punch</option>
+        <option value='7" Long Range'>7" Long Range</option>
+        <option value='10" Freestyle'>10" Freestyle</option>
+        <option value='13" Freestyle'>13" Freestyle</option>
+        <option value="__custom__">Custom drone...</option>
+      </select>
+      <input id="customDrone" type="text" placeholder="Type custom drone" style="display:none;">
+    </div>
+
+    <div class="field-group">
+      <label>Duration (minutes)</label>
+      <input id="duration" type="number" step="0.1" placeholder="Example: 5.5">
+    </div>
+
+    <div class="field-group">
+      <label>Location</label>
+      <select id="locationSelect">
+        <option value="Home">Home</option>
+        <option value="Flying Spot">Flying Spot</option>
+        <option value="Closed Office Building">Closed Office Building</option>
+        <option value="Open Area">Open Area</option>
+        <option value="Treed Area">Treed Area</option>
+        <option value="__custom__">Custom location...</option>
+      </select>
+      <input id="customLocation" type="text" placeholder="Type custom location" style="display:none;">
+    </div>
+
+    <div class="field-group">
+      <label>Date / Time</label>
+      <input id="date" type="datetime-local">
+    </div>
+
+    <div class="button-stack">
+      <button id="saveBtn" class="primary-btn" onclick="saveFlight()">Save Flight</button>
+      <button id="cancelEditBtn" class="secondary-btn" onclick="cancelEdit()" style="display:none;">Cancel Edit</button>
+    </div>
+
+    <div id="editStatus" class="status-text" style="display:none;">Editing flight...</div>
   </div>
 
-  <div class="field-group">
-    <label>Location</label>
-    <select id="locationSelect">
-      <option value="Home">Home</option>
-      <option value="Flying Spot">Flying Spot</option>
-      <option value="Closed Office Building">Closed Office Building</option>
-      <option value="Open Area">Open Area</option>
-      <option value="Treed Area">Treed Area</option>
-      <option value="__custom__">Custom location...</option>
-    </select>
-    <input id="customLocation" type="text" placeholder="Type custom location" style="display:none;">
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Flights</div>
+      <div class="stat-value" id="totalFlights">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Hours</div>
+      <div class="stat-value" id="totalHours">0.00</div>
+    </div>
   </div>
 
-  <div class="field-group">
-    <label>Date</label>
-    <input id="date" type="datetime-local">
+  <div class="card">
+    <button class="toggle-btn" onclick="toggleHistory()">Flight History ▼</button>
+    <div id="historyWrap">
+      <div id="history"></div>
+    </div>
   </div>
 
-  <button onclick="saveFlight()">Save Flight</button>
-</div>
-
-<div class="card">
-  <b>Total Flights:</b> <span id="totalFlights">0</span><br>
-  <b>Total Hours:</b> <span id="totalHours">0.00</span>
-</div>
-
-<div class="card">
-  <button class="toggle-btn" onclick="toggleHistory()">Flight History ▼</button>
-  <div id="historyWrap">
-    <div id="history"></div>
+  <div class="card">
+    <div class="button-row">
+      <button class="secondary-btn" onclick="exportData()">Export Logs</button>
+      <button class="secondary-btn" onclick="importData()">Import Logs</button>
+    </div>
   </div>
-</div>
 
-<div class="card">
-  <button onclick="exportData()">Export Logs</button>
-  <button onclick="importData()">Import Logs</button>
 </div>
 
 <script>
 let logs = JSON.parse(localStorage.getItem("fpvLogs")) || [];
+let editIndex = -1;
 
 const droneSelect = document.getElementById("droneSelect");
 const customDrone = document.getElementById("customDrone");
 const locationSelect = document.getElementById("locationSelect");
 const customLocation = document.getElementById("customLocation");
+const dateInput = document.getElementById("date");
+const saveBtn = document.getElementById("saveBtn");
+const cancelEditBtn = document.getElementById("cancelEditBtn");
+const editStatus = document.getElementById("editStatus");
 
 droneSelect.addEventListener("change", function () {
   customDrone.style.display = this.value === "__custom__" ? "block" : "none";
@@ -179,18 +390,40 @@ locationSelect.addEventListener("change", function () {
   customLocation.style.display = this.value === "__custom__" ? "block" : "none";
 });
 
+function setNow() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+  dateInput.value = local;
+}
+
 function getDroneValue() {
-  if (droneSelect.value === "__custom__") {
-    return customDrone.value.trim();
-  }
-  return droneSelect.value;
+  return droneSelect.value === "__custom__" ? customDrone.value.trim() : droneSelect.value;
 }
 
 function getLocationValue() {
-  if (locationSelect.value === "__custom__") {
-    return customLocation.value.trim();
-  }
-  return locationSelect.value;
+  return locationSelect.value === "__custom__" ? customLocation.value.trim() : locationSelect.value;
+}
+
+function saveToStorage() {
+  localStorage.setItem("fpvLogs", JSON.stringify(logs));
+}
+
+function resetForm() {
+  document.getElementById("duration").value = "";
+  customDrone.value = "";
+  customLocation.value = "";
+  droneSelect.value = '3" Toothpick';
+  locationSelect.value = 'Home';
+  customDrone.style.display = "none";
+  customLocation.style.display = "none";
+  setNow();
+
+  editIndex = -1;
+  saveBtn.textContent = "Save Flight";
+  cancelEditBtn.style.display = "none";
+  editStatus.style.display = "none";
 }
 
 function saveFlight() {
@@ -206,26 +439,95 @@ function saveFlight() {
 
   let hours = minutes / 60;
 
-  logs.unshift({
+  const entry = {
     drone,
     minutes,
     duration: hours,
     location,
     date
-  });
+  };
 
-  localStorage.setItem("fpvLogs", JSON.stringify(logs));
+  if (editIndex >= 0) {
+    logs[editIndex] = entry;
+  } else {
+    logs.unshift(entry);
+  }
 
-  document.getElementById("duration").value = "";
-  document.getElementById("date").value = "";
-  customDrone.value = "";
-  customLocation.value = "";
-  droneSelect.value = '3" Toothpick';
-  locationSelect.value = 'Home';
-  customDrone.style.display = "none";
-  customLocation.style.display = "none";
-
+  saveToStorage();
   checkBackupReminder();
+  resetForm();
+  update();
+}
+
+function editFlight(index) {
+  const l = logs[index];
+  if (!l) return;
+
+  editIndex = index;
+
+  const presetDrones = [
+    '3" Toothpick',
+    "75mm Whoop",
+    '5" Pirat Punch',
+    '7" Long Range',
+    '10" Freestyle',
+    '13" Freestyle'
+  ];
+
+  const presetLocations = [
+    "Home",
+    "Flying Spot",
+    "Closed Office Building",
+    "Open Area",
+    "Treed Area"
+  ];
+
+  if (presetDrones.includes(l.drone)) {
+    droneSelect.value = l.drone;
+    customDrone.style.display = "none";
+    customDrone.value = "";
+  } else {
+    droneSelect.value = "__custom__";
+    customDrone.style.display = "block";
+    customDrone.value = l.drone;
+  }
+
+  if (presetLocations.includes(l.location)) {
+    locationSelect.value = l.location;
+    customLocation.style.display = "none";
+    customLocation.value = "";
+  } else {
+    locationSelect.value = "__custom__";
+    customLocation.style.display = "block";
+    customLocation.value = l.location;
+  }
+
+  document.getElementById("duration").value = l.minutes;
+  document.getElementById("date").value = l.date;
+
+  saveBtn.textContent = "Update Flight";
+  cancelEditBtn.style.display = "block";
+  editStatus.style.display = "block";
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function cancelEdit() {
+  resetForm();
+}
+
+function deleteFlight(index) {
+  if (!confirm("Delete this flight?")) return;
+
+  logs.splice(index, 1);
+  saveToStorage();
+
+  if (editIndex === index) {
+    resetForm();
+  } else if (editIndex > index) {
+    editIndex--;
+  }
+
   update();
 }
 
@@ -243,13 +545,23 @@ function update() {
   }
 
   let html = "";
-  logs.forEach(l => {
+  logs.forEach((l, index) => {
     html += `
       <div class="history-item">
-        <b>${escapeHtml(l.drone)}</b><br>
-        ${Number(l.minutes).toFixed(1)} min (${Number(l.duration).toFixed(2)} hr)<br>
-        ${escapeHtml(l.location)}<br>
-        <div class="small">${escapeHtml(l.date)}</div>
+        <div class="history-top">
+          <div>
+            <div class="history-drone">${escapeHtml(l.drone)}</div>
+            <div class="history-meta">
+              ${Number(l.minutes).toFixed(1)} min (${Number(l.duration).toFixed(2)} hr)<br>
+              ${escapeHtml(l.location)}
+            </div>
+            <div class="small" style="margin-top:6px;">${escapeHtml(l.date)}</div>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="secondary-btn" onclick="editFlight(${index})">Edit</button>
+          <button class="danger-btn" onclick="deleteFlight(${index})">Delete</button>
+        </div>
       </div>`;
   });
 
@@ -289,7 +601,8 @@ function importData() {
         }
 
         logs = imported;
-        localStorage.setItem("fpvLogs", JSON.stringify(logs));
+        saveToStorage();
+        resetForm();
         update();
       } catch (err) {
         alert("Could not import file");
@@ -320,6 +633,7 @@ function escapeHtml(text) {
     .replaceAll("'", "&#039;");
 }
 
+setNow();
 update();
 </script>
 
