@@ -62,6 +62,7 @@ button {
   background: #f5c400;
   font-weight: bold;
   cursor: pointer;
+  margin-bottom: 8px;
 }
 
 .history-item {
@@ -159,6 +160,7 @@ button {
 
 <div class="card">
   <button onclick="exportData()">Export Logs</button>
+  <button onclick="importData()">Import Logs</button>
 </div>
 
 <script>
@@ -266,6 +268,37 @@ function exportData() {
   a.click();
 
   localStorage.setItem("lastBackup", Date.now());
+}
+
+function importData() {
+  let input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json,application/json";
+
+  input.onchange = e => {
+    let file = e.target.files[0];
+    if (!file) return;
+
+    let reader = new FileReader();
+    reader.onload = () => {
+      try {
+        let imported = JSON.parse(reader.result);
+        if (!Array.isArray(imported)) {
+          alert("Invalid backup file");
+          return;
+        }
+
+        logs = imported;
+        localStorage.setItem("fpvLogs", JSON.stringify(logs));
+        update();
+      } catch (err) {
+        alert("Could not import file");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  input.click();
 }
 
 function checkBackupReminder() {
