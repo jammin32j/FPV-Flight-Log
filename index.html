@@ -171,6 +171,10 @@
           <div class="field">
             <label for="weather">Weather</label>
             <input id="weather" placeholder="Calm, 5-10 mph wind, overcast" />
+            <div class="actions-single" style="margin-top:10px;">
+              <button class="secondary" id="useCurrentWeatherBtn" type="button">Use Current Weather</button>
+            </div>
+            <p class="hint" id="weatherStatus"></p>
           </div>
           <div class="field">
             <label for="airspace">Airspace / Authorization</label>
@@ -311,7 +315,8 @@
       maintDate: $('maintDate'), maintAircraft: $('maintAircraft'), maintType: $('maintType'), maintStatus: $('maintStatus'), maintDetails: $('maintDetails'),
       saveMaintenanceBtn: $('saveMaintenanceBtn'), cancelMaintenanceBtn: $('cancelMaintenanceBtn'), maintenanceFormTitle: $('maintenanceFormTitle'),
       maintenanceHistory: $('maintenanceHistory'),
-      importInput: $('importInput'), useCurrentLocationBtn: $('useCurrentLocationBtn'), gpsStatus: $('gpsStatus')
+      importInput: $('importInput'), useCurrentLocationBtn: $('useCurrentLocationBtn'), gpsStatus: $('gpsStatus'),
+      useCurrentWeatherBtn: $('useCurrentWeatherBtn'), weatherStatus: $('weatherStatus')
     };
 
     function makeId() {
@@ -347,6 +352,120 @@
 
     function setGpsStatus(message) {
       if (els.gpsStatus) els.gpsStatus.textContent = message || '';
+    }
+
+
+    function setWeatherStatus(message) {
+      if (els.weatherStatus) els.weatherStatus.textContent = message || '';
+    }
+
+    function weatherCodeToText(code) {
+      const map = {
+        0: 'Clear',
+        1: 'Mostly clear',
+        2: 'Partly cloudy',
+        3: 'Overcast',
+        45: 'Fog',
+        48: 'Rime fog',
+        51: 'Light drizzle',
+        53: 'Drizzle',
+        55: 'Heavy drizzle',
+        56: 'Freezing drizzle',
+        57: 'Heavy freezing drizzle',
+        61: 'Light rain',
+        63: 'Rain',
+        65: 'Heavy rain',
+        66: 'Freezing rain',
+        67: 'Heavy freezing rain',
+        71: 'Light snow',
+        73: 'Snow',
+        75: 'Heavy snow',
+        77: 'Snow grains',
+        80: 'Rain showers',
+        81: 'Heavy rain showers',
+        82: 'Violent rain showers',
+        85: 'Snow showers',
+        86: 'Heavy snow showers',
+        95: 'Thunderstorm',
+        96: 'Thunderstorm with hail',
+        99: 'Severe thunderstorm with hail'
+      };
+      return map[Number(code)] || 'Unknown';
+    }
+
+    function extractLatLonFromGps(value) {
+      const match = String(value || '').match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+      if (!match) return null;
+      return { lat: parseFloat(match[1]), lon: parseFloat(match[2]) };
+    }
+
+    async function fetchCurrentWeather(lat, lon) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch`;
+      const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!response.ok) throw new Error('Weather lookup failed');
+      const payload = await response.json();
+      if (!payload || !payload.current) throw new Error('No weather data returned');
+      return payload.current;
+    }
+
+    async function useCurrentWeather() {
+      setWeatherStatus('Getting current weather...');
+      els.useCurrentWeatherBtn.disabled = true;
+      const finish = () => { els.useCurrentWeatherBtn.disabled = false; };
+
+      async function applyWeather(lat, lon) {
+        const current = await fetchCurrentWeather(lat, lon);
+        const summary = [
+          `${Math.round(current.temperature_2m)}°F`,
+          weatherCodeToText(current.weather_code),
+          `wind ${Math.round(current.wind_speed_10m)} mph`
+        ];
+        if (Number.isFinite(current.wind_gusts_10m)) summary.push(`gusts ${Math.round(current.wind_gusts_10m)} mph`);
+        if (Number.isFinite(current.relative_humidity_2m)) summary.push(`${Math.round(current.relative_humidity_2m)}% humidity`);
+        els.weather.value = summary.join(', ');
+        setWeatherStatus('Current weather loaded.');
+      }
+
+      try {
+        const existing = extractLatLonFromGps(els.gps.value);
+        if (existing) {
+          await applyWeather(existing.lat, existing.lon);
+          finish();
+          return;
+        }
+        if (!navigator.geolocation) throw new Error('This browser does not support GPS location.');
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          try {
+            const lat = Number(position.coords.latitude).toFixed(6);
+            const lon = Number(position.coords.longitude).toFixed(6);
+            const coords = `${lat}, ${lon}`;
+            els.gps.value = coords;
+            if (!els.location.value.trim()) {
+              try {
+                const address = await reverseGeocode(lat, lon);
+                els.location.value = address || coords;
+              } catch {
+                els.location.value = coords;
+              }
+            }
+            await applyWeather(lat, lon);
+          } catch (error) {
+            setWeatherStatus(error.message || 'Weather lookup failed.');
+            alert(error.message || 'Weather lookup failed.');
+          } finally {
+            finish();
+          }
+        }, (error) => {
+          const message = error.code === 1 ? 'Location permission was denied.' : error.code === 2 ? 'Your location could not be determined.' : error.code === 3 ? 'Location request timed out.' : 'Location lookup failed.';
+          setWeatherStatus(message);
+          alert(message);
+          finish();
+        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+      } catch (error) {
+        setWeatherStatus(error.message || 'Weather lookup failed.');
+        alert(error.message || 'Weather lookup failed.');
+        finish();
+      }
     }
 
     async function reverseGeocode(lat, lon) {
@@ -392,27 +511,16 @@
     }
 
     function normalizeFlight(f) {
-      const hasMinutes = f.minutes !== undefined && f.minutes !== null && f.minutes !== '';
-      const hasDurationMinutes = f.durationMinutes !== undefined && f.durationMinutes !== null && f.durationMinutes !== '';
-      const rawMinutes = hasDurationMinutes ? parseFloat(f.durationMinutes) : hasMinutes ? parseFloat(f.minutes) : NaN;
-      const rawDuration = parseFloat(f.duration ?? 0);
-      let minutes = 0;
-
-      if (!Number.isNaN(rawMinutes) && rawMinutes > 0) {
-        minutes = rawMinutes;
-      } else if (!Number.isNaN(rawDuration) && rawDuration > 0) {
-        minutes = rawDuration <= 24 ? rawDuration * 60 : rawDuration;
-      }
-
+      const duration = parseFloat(f.durationMinutes ?? f.duration ?? 0);
       return {
         id: f.id || makeId(),
-        dateTime: f.dateTime || f.date || nowLocalDateTime(),
+        dateTime: f.dateTime || nowLocalDateTime(),
         flightType: f.flightType || 'Training / Test',
         aircraft: f.aircraft || f.drone || 'Unknown Aircraft',
         purpose: f.purpose || 'Practice',
         location: f.location || '',
         gps: f.gps || '',
-        durationMinutes: Number(minutes).toFixed(1),
+        durationMinutes: !Number.isNaN(duration) ? Number(duration).toFixed(1) : '0.0',
         batteryName: f.batteryName || '',
         batteryCycles: f.batteryCycles || '',
         weather: f.weather || '',
@@ -626,6 +734,7 @@
       els.maintenanceFlag.value = 'No';
       els.notes.value = '';
       setGpsStatus('');
+      setWeatherStatus('');
     }
 
     function resetBatteryForm() {
@@ -749,6 +858,7 @@
     });
 
     els.useCurrentLocationBtn.addEventListener('click', useCurrentLocation);
+    els.useCurrentWeatherBtn.addEventListener('click', useCurrentWeather);
 
     els.cancelFlightBtn.addEventListener('click', resetFlightForm);
     els.cancelBatteryBtn.addEventListener('click', resetBatteryForm);
@@ -894,9 +1004,7 @@
           resetFlightForm();
           resetBatteryForm();
           resetMaintenanceForm();
-          const importedMinutesTotal = data.flights.reduce((sum, f) => sum + (parseFloat(f.durationMinutes) || 0), 0);
-          const importedHoursTotal = importedMinutesTotal / 60;
-          alert(`Import complete. Loaded ${data.flights.length} flight(s), ${data.batteries.length} battery record(s), and ${data.maintenance.length} maintenance record(s). Total imported flight time: ${importedHoursTotal.toFixed(1)} hours.`);
+          alert(`Import complete. Loaded ${data.flights.length} flight(s), ${data.batteries.length} battery record(s), and ${data.maintenance.length} maintenance record(s).`);
         } catch {
           alert('That JSON file is not valid for this app.');
         }
