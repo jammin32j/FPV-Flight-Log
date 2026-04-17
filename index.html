@@ -511,16 +511,28 @@
     }
 
     function normalizeFlight(f) {
-      const duration = parseFloat(f.durationMinutes ?? f.duration ?? 0);
+      const hasDurationMinutes = f.durationMinutes !== undefined && f.durationMinutes !== null && f.durationMinutes !== '';
+      const hasMinutes = f.minutes !== undefined && f.minutes !== null && f.minutes !== '';
+      const hasDurationHours = f.duration !== undefined && f.duration !== null && f.duration !== '';
+
+      let minutes = 0;
+      if (hasDurationMinutes) {
+        minutes = parseFloat(f.durationMinutes);
+      } else if (hasMinutes) {
+        minutes = parseFloat(f.minutes);
+      } else if (hasDurationHours) {
+        minutes = parseFloat(f.duration) * 60;
+      }
+
       return {
         id: f.id || makeId(),
-        dateTime: f.dateTime || nowLocalDateTime(),
+        dateTime: f.dateTime || f.date || nowLocalDateTime(),
         flightType: f.flightType || 'Training / Test',
         aircraft: f.aircraft || f.drone || 'Unknown Aircraft',
         purpose: f.purpose || 'Practice',
         location: f.location || '',
         gps: f.gps || '',
-        durationMinutes: !Number.isNaN(duration) ? Number(duration).toFixed(1) : '0.0',
+        durationMinutes: !Number.isNaN(minutes) ? Number(minutes).toFixed(1) : '0.0',
         batteryName: f.batteryName || '',
         batteryCycles: f.batteryCycles || '',
         weather: f.weather || '',
