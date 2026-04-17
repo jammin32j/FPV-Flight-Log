@@ -807,18 +807,32 @@
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result);
+          const importedFlights = Array.isArray(parsed)
+            ? parsed
+            : Array.isArray(parsed.flights)
+              ? parsed.flights
+              : Array.isArray(parsed.logs)
+                ? parsed.logs
+                : [];
+          const importedBatteries = Array.isArray(parsed?.batteries) ? parsed.batteries : [];
+          const importedMaintenance = Array.isArray(parsed?.maintenance) ? parsed.maintenance : [];
+
+          if (!importedFlights.length && !importedBatteries.length && !importedMaintenance.length) {
+            throw new Error('No importable records found');
+          }
+
           data = {
             version: 1,
-            flights: Array.isArray(parsed.flights) ? parsed.flights.map(normalizeFlight) : [],
-            batteries: Array.isArray(parsed.batteries) ? parsed.batteries.map(normalizeBattery) : [],
-            maintenance: Array.isArray(parsed.maintenance) ? parsed.maintenance.map(normalizeMaintenance) : []
+            flights: importedFlights.map(normalizeFlight),
+            batteries: importedBatteries.map(normalizeBattery),
+            maintenance: importedMaintenance.map(normalizeMaintenance)
           };
           saveData();
           renderAll();
           resetFlightForm();
           resetBatteryForm();
           resetMaintenanceForm();
-          alert('Import complete.');
+          alert(`Import complete. Loaded ${data.flights.length} flight(s), ${data.batteries.length} battery record(s), and ${data.maintenance.length} maintenance record(s).`);
         } catch {
           alert('That JSON file is not valid for this app.');
         }
