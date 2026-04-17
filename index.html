@@ -1,641 +1,847 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Gambit FPV Flight Log</title>
-
-<style>
-:root{
-  --bg:#0b1018;
-  --bg2:#111826;
-  --card:rgba(24,30,42,.9);
-  --card2:rgba(35,43,58,.95);
-  --text:#f5f7fb;
-  --muted:#aab3c2;
-  --gold:#f5c400;
-  --gold2:#ffdf5e;
-  --line:rgba(255,255,255,.08);
-  --shadow:0 10px 30px rgba(0,0,0,.45);
-  --danger:#c62828;
-  --secondary:#30394a;
-  --radius:18px;
-}
-
-* { box-sizing:border-box; }
-
-html, body {
-  margin:0;
-  padding:0;
-  background:
-    radial-gradient(circle at top right, rgba(245,196,0,.12), transparent 22%),
-    linear-gradient(180deg, var(--bg2), var(--bg));
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-  min-height:100%;
-}
-
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:url('logo.png') center center no-repeat;
-  background-size:72%;
-  opacity:.035;
-  pointer-events:none;
-  filter:grayscale(.1);
-}
-
-.app {
-  max-width:760px;
-  margin:0 auto;
-  padding:16px 12px 28px;
-}
-
-.header {
-  text-align:center;
-  padding:12px 8px 18px;
-}
-
-.logo-wrap{
-  width:120px;
-  height:120px;
-  margin:0 auto 14px;
-  border-radius:26px;
-  padding:8px;
-  background:linear-gradient(145deg, rgba(245,196,0,.28), rgba(255,255,255,.05));
-  border:1px solid rgba(255,255,255,.1);
-  box-shadow:0 0 30px rgba(245,196,0,.08), inset 0 1px 0 rgba(255,255,255,.08);
-  backdrop-filter:blur(10px);
-}
-
-.header img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  border-radius:20px;
-  display:block;
-}
-
-.header h1{
-  margin:0;
-  font-size:30px;
-  letter-spacing:.06em;
-  font-weight:900;
-}
-
-.header p{
-  margin:6px 0 0;
-  color:var(--muted);
-  font-size:14px;
-}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:24px;
-  padding:16px;
-  margin-bottom:14px;
-  box-shadow:var(--shadow);
-  backdrop-filter:blur(12px);
-}
-
-.stats{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-.stat-card{
-  background:var(--card2);
-  border:1px solid var(--line);
-  border-radius:20px;
-  padding:14px;
-}
-
-.stat-label{
-  color:var(--muted);
-  font-size:13px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  margin-bottom:8px;
-}
-
-.stat-value{
-  font-size:28px;
-  font-weight:900;
-  line-height:1;
-}
-
-.field-group{
-  margin-bottom:14px;
-}
-
-label{
-  display:block;
-  margin-bottom:8px;
-  font-size:14px;
-  font-weight:700;
-  color:#eef2f8;
-}
-
-input, select, button{
-  width:100%;
-  min-height:52px;
-  border:none;
-  outline:none;
-  border-radius:16px;
-  font-size:16px;
-}
-
-input, select{
-  background:rgba(255,255,255,.06);
-  color:var(--text);
-  padding:0 14px;
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
-}
-
-input::placeholder{
-  color:#97a2b4;
-}
-
-input:focus, select:focus{
-  border:1px solid rgba(245,196,0,.6);
-  box-shadow:0 0 0 3px rgba(245,196,0,.18);
-}
-
-button{
-  cursor:pointer;
-  font-weight:800;
-  transition:.18s ease;
-  letter-spacing:.01em;
-}
-
-button:active{
-  transform:scale(.99);
-}
-
-.primary-btn{
-  background:linear-gradient(180deg, var(--gold2), var(--gold));
-  color:#131313;
-  box-shadow:0 6px 18px rgba(245,196,0,.22);
-}
-
-.secondary-btn{
-  background:var(--secondary);
-  color:#fff;
-}
-
-.danger-btn{
-  background:linear-gradient(180deg, #d63a3a, var(--danger));
-  color:#fff;
-}
-
-.button-stack button{
-  margin-bottom:10px;
-}
-
-.button-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-.toggle-btn{
-  background:var(--secondary);
-  color:#fff;
-  margin:0;
-}
-
-#historyWrap{
-  display:none;
-  margin-top:12px;
-}
-
-#historyWrap.open{
-  display:block;
-}
-
-.history-item{
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:18px;
-  padding:12px;
-  margin-top:10px;
-}
-
-.history-top{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  align-items:flex-start;
-}
-
-.history-drone{
-  font-size:18px;
-  font-weight:800;
-  margin-bottom:4px;
-}
-
-.history-meta{
-  color:#e5e9f0;
-  line-height:1.45;
-}
-
-.small{
-  color:var(--muted);
-  font-size:13px;
-}
-
-.action-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:10px;
-}
-
-.status-text{
-  color:var(--gold2);
-  font-size:14px;
-  margin-top:8px;
-  font-weight:700;
-}
-
-.section-title{
-  font-size:20px;
-  font-weight:900;
-  margin:0 0 12px;
-}
-
-@media (max-width:560px){
-  .stats, .button-row, .action-row{
-    grid-template-columns:1fr;
-  }
-  .logo-wrap{
-    width:104px;
-    height:104px;
-  }
-  .header h1{
-    font-size:26px;
-  }
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#facc15" />
+  <title>Part 107 Flight Log Pro</title>
+  <style>
+    :root {
+      --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #64748b;
+      --accent: #facc15; --accent-dark: #eab308; --danger: #dc2626; --danger-bg: #fee2e2;
+      --success-bg: #dcfce7; --success-text: #166534; --border: #e2e8f0;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.08); --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom) 14px;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 14px 0 40px; }
+    .hero, .card { background: var(--card); border-radius: 28px; box-shadow: var(--shadow); }
+    .hero { background: linear-gradient(135deg, #fde047, #facc15, #f59e0b); padding: 20px; margin-bottom: 14px; }
+    h1 { margin: 0 0 6px; font-size: 32px; line-height: 1.05; }
+    h2 { margin: 0 0 12px; font-size: 22px; }
+    .sub { margin: 0; color: rgba(15, 23, 42, 0.8); font-size: 15px; }
+    .card { padding: 16px; margin-bottom: 14px; }
+    .grid { display: grid; gap: 14px; }
+    .stats { grid-template-columns: repeat(4, 1fr); }
+    .stat-label { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 800; }
+    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .tab-btn, button, input, select, textarea { font: inherit; }
+    .tab-btn, button {
+      min-height: 50px; border-radius: 18px; border: 1px solid var(--border);
+      background: #fff; color: var(--text); cursor: pointer; font-weight: 800; padding: 0 14px;
+    }
+    .tab-btn.active, .primary { background: var(--accent); border-color: transparent; color: #111827; }
+    .primary:active, .tab-btn.active:active { background: var(--accent-dark); }
+    .secondary { background: #fff; }
+    .danger { background: var(--danger-bg); color: #991b1b; border-color: transparent; }
+    .success { background: var(--success-bg); color: var(--success-text); border-color: transparent; }
+    .field { margin-bottom: 14px; }
+    label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 15px; }
+    input, select, textarea {
+      width: 100%; min-height: 52px; border-radius: var(--radius); border: 1px solid var(--border);
+      padding: 12px 16px; font-size: 16px; background: #fff; color: var(--text);
+    }
+    textarea { min-height: 92px; resize: vertical; }
+    .row-2, .row-3 { display: grid; gap: 10px; }
+    .row-2 { grid-template-columns: 1fr 1fr; }
+    .row-3 { grid-template-columns: repeat(3, 1fr); }
+    .actions { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+    .actions-3 { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .item { border: 1px solid var(--border); border-radius: 24px; padding: 14px; margin-top: 12px; background: #fff; }
+    .item-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .item-title { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+    .meta, .small { color: var(--muted); font-size: 14px; line-height: 1.45; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .pill { font-size: 12px; font-weight: 700; padding: 6px 10px; border-radius: 999px; background: #f1f5f9; }
+    .mini-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .mini-actions button { min-height: 40px; width: auto; border-radius: 14px; font-size: 14px; }
+    .empty { text-align: center; color: var(--muted); padding: 22px 12px; border: 2px dashed var(--border); border-radius: 24px; }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .toolbar { display: grid; gap: 10px; grid-template-columns: repeat(4, 1fr); }
+    .hr { height: 1px; background: var(--border); margin: 12px 0; }
+    .badge-yes { background: #dcfce7; color: #166534; }
+    .badge-no { background: #f1f5f9; color: #334155; }
+    .badge-warn { background: #ffedd5; color: #9a3412; }
+    @media (max-width: 800px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .toolbar, .actions-3 { grid-template-columns: repeat(2, 1fr); }
+      .row-3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      h1 { font-size: 28px; }
+      .tabs, .toolbar, .actions, .actions-3, .row-2 { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-
-<div class="app">
-
-  <div class="header">
-    <div class="logo-wrap">
-      <img src="logo.png" alt="Gambit FPV Logo">
-    </div>
-    <h1>GAMBIT FPV</h1>
-    <p>Flight Log</p>
-  </div>
-
-  <div class="card">
-    <div class="section-title">Add Flight</div>
-
-    <div class="field-group">
-      <label>Drone</label>
-      <select id="droneSelect">
-        <option value='3" Toothpick'>3" Toothpick</option>
-        <option value="75mm Whoop">75mm Whoop</option>
-        <option value='5" Pirat Punch'>5" Pirat Punch</option>
-        <option value='7" Long Range'>7" Long Range</option>
-        <option value='10" Freestyle'>10" Freestyle</option>
-        <option value='13" Freestyle'>13" Freestyle</option>
-        <option value="__custom__">Custom drone...</option>
-      </select>
-      <input id="customDrone" type="text" placeholder="Type custom drone" style="display:none;">
+  <div class="wrap">
+    <div class="hero">
+      <h1>Part 107 Flight Log Pro</h1>
+      <p class="sub">Flight logging, battery tracking, maintenance notes, JSON backup, and CSV export in one iPhone-friendly file.</p>
     </div>
 
-    <div class="field-group">
-      <label>Duration (minutes)</label>
-      <input id="duration" type="number" step="0.1" placeholder="Example: 5.5">
+    <div class="grid stats">
+      <div class="card"><div class="stat-label">Total Flights</div><div class="stat-value" id="statFlights">0</div></div>
+      <div class="card"><div class="stat-label">Total Hours</div><div class="stat-value" id="statHours">0.0</div></div>
+      <div class="card"><div class="stat-label">Part 107 Flights</div><div class="stat-value" id="stat107">0</div></div>
+      <div class="card"><div class="stat-label">Aircraft Logged</div><div class="stat-value" id="statAircraft">0</div></div>
     </div>
 
-    <div class="field-group">
-      <label>Location</label>
-      <select id="locationSelect">
-        <option value="Home">Home</option>
-        <option value="Flying Spot">Flying Spot</option>
-        <option value="Closed Office Building">Closed Office Building</option>
-        <option value="Open Area">Open Area</option>
-        <option value="Treed Area">Treed Area</option>
-        <option value="__custom__">Custom location...</option>
-      </select>
-      <input id="customLocation" type="text" placeholder="Type custom location" style="display:none;">
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="flights">Flights</button>
+        <button class="tab-btn" data-tab="batteries">Batteries</button>
+        <button class="tab-btn" data-tab="maintenance">Maintenance</button>
+        <button class="tab-btn" data-tab="export">Export / Backup</button>
+      </div>
     </div>
 
-    <div class="field-group">
-      <label>Date / Time</label>
-      <input id="date" type="datetime-local">
-    </div>
-
-    <div class="button-stack">
-      <button id="saveBtn" class="primary-btn" onclick="saveFlight()">Save Flight</button>
-      <button id="cancelEditBtn" class="secondary-btn" onclick="cancelEdit()" style="display:none;">Cancel Edit</button>
-    </div>
-
-    <div id="editStatus" class="status-text" style="display:none;">Editing flight...</div>
-  </div>
-
-  <div class="stats">
-    <div class="stat-card">
-      <div class="stat-label">Total Flights</div>
-      <div class="stat-value" id="totalFlights">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Total Hours</div>
-      <div class="stat-value" id="totalHours">0.00</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <button class="toggle-btn" onclick="toggleHistory()">Flight History ▼</button>
-    <div id="historyWrap">
-      <div id="history"></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="button-row">
-      <button class="secondary-btn" onclick="exportData()">Export Logs</button>
-      <button class="secondary-btn" onclick="importData()">Import Logs</button>
-    </div>
-  </div>
-
-</div>
-
-<script>
-let logs = JSON.parse(localStorage.getItem("fpvLogs")) || [];
-let editIndex = -1;
-
-const droneSelect = document.getElementById("droneSelect");
-const customDrone = document.getElementById("customDrone");
-const locationSelect = document.getElementById("locationSelect");
-const customLocation = document.getElementById("customLocation");
-const dateInput = document.getElementById("date");
-const saveBtn = document.getElementById("saveBtn");
-const cancelEditBtn = document.getElementById("cancelEditBtn");
-const editStatus = document.getElementById("editStatus");
-
-droneSelect.addEventListener("change", function () {
-  customDrone.style.display = this.value === "__custom__" ? "block" : "none";
-});
-
-locationSelect.addEventListener("change", function () {
-  customLocation.style.display = this.value === "__custom__" ? "block" : "none";
-});
-
-function setNow() {
-  const now = new Date();
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
-  dateInput.value = local;
-}
-
-function getDroneValue() {
-  return droneSelect.value === "__custom__" ? customDrone.value.trim() : droneSelect.value;
-}
-
-function getLocationValue() {
-  return locationSelect.value === "__custom__" ? customLocation.value.trim() : locationSelect.value;
-}
-
-function saveToStorage() {
-  localStorage.setItem("fpvLogs", JSON.stringify(logs));
-}
-
-function resetForm() {
-  document.getElementById("duration").value = "";
-  customDrone.value = "";
-  customLocation.value = "";
-  droneSelect.value = '3" Toothpick';
-  locationSelect.value = 'Home';
-  customDrone.style.display = "none";
-  customLocation.style.display = "none";
-  setNow();
-
-  editIndex = -1;
-  saveBtn.textContent = "Save Flight";
-  cancelEditBtn.style.display = "none";
-  editStatus.style.display = "none";
-}
-
-function saveFlight() {
-  let drone = getDroneValue();
-  let minutes = parseFloat(document.getElementById("duration").value);
-  let location = getLocationValue();
-  let date = document.getElementById("date").value;
-
-  if (!drone || isNaN(minutes) || minutes <= 0 || !location || !date) {
-    alert("Fill everything");
-    return;
-  }
-
-  let hours = minutes / 60;
-
-  const entry = {
-    drone,
-    minutes,
-    duration: hours,
-    location,
-    date
-  };
-
-  if (editIndex >= 0) {
-    logs[editIndex] = entry;
-  } else {
-    logs.unshift(entry);
-  }
-
-  saveToStorage();
-  checkBackupReminder();
-  resetForm();
-  update();
-}
-
-function editFlight(index) {
-  const l = logs[index];
-  if (!l) return;
-
-  editIndex = index;
-
-  const presetDrones = [
-    '3" Toothpick',
-    "75mm Whoop",
-    '5" Pirat Punch',
-    '7" Long Range',
-    '10" Freestyle',
-    '13" Freestyle'
-  ];
-
-  const presetLocations = [
-    "Home",
-    "Flying Spot",
-    "Closed Office Building",
-    "Open Area",
-    "Treed Area"
-  ];
-
-  if (presetDrones.includes(l.drone)) {
-    droneSelect.value = l.drone;
-    customDrone.style.display = "none";
-    customDrone.value = "";
-  } else {
-    droneSelect.value = "__custom__";
-    customDrone.style.display = "block";
-    customDrone.value = l.drone;
-  }
-
-  if (presetLocations.includes(l.location)) {
-    locationSelect.value = l.location;
-    customLocation.style.display = "none";
-    customLocation.value = "";
-  } else {
-    locationSelect.value = "__custom__";
-    customLocation.style.display = "block";
-    customLocation.value = l.location;
-  }
-
-  document.getElementById("duration").value = l.minutes;
-  document.getElementById("date").value = l.date;
-
-  saveBtn.textContent = "Update Flight";
-  cancelEditBtn.style.display = "block";
-  editStatus.style.display = "block";
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function cancelEdit() {
-  resetForm();
-}
-
-function deleteFlight(index) {
-  if (!confirm("Delete this flight?")) return;
-
-  logs.splice(index, 1);
-  saveToStorage();
-
-  if (editIndex === index) {
-    resetForm();
-  } else if (editIndex > index) {
-    editIndex--;
-  }
-
-  update();
-}
-
-function update() {
-  document.getElementById("totalFlights").innerText = logs.length;
-
-  let total = logs.reduce((sum, l) => sum + Number(l.duration || 0), 0);
-  document.getElementById("totalHours").innerText = total.toFixed(2);
-
-  let history = document.getElementById("history");
-
-  if (logs.length === 0) {
-    history.innerHTML = '<div class="small">No flights saved yet.</div>';
-    return;
-  }
-
-  let html = "";
-  logs.forEach((l, index) => {
-    html += `
-      <div class="history-item">
-        <div class="history-top">
-          <div>
-            <div class="history-drone">${escapeHtml(l.drone)}</div>
-            <div class="history-meta">
-              ${Number(l.minutes).toFixed(1)} min (${Number(l.duration).toFixed(2)} hr)<br>
-              ${escapeHtml(l.location)}
-            </div>
-            <div class="small" style="margin-top:6px;">${escapeHtml(l.date)}</div>
+    <div class="panel active" id="panel-flights">
+      <div class="card">
+        <h2 id="flightFormTitle">Add Flight</h2>
+        <div class="row-2">
+          <div class="field">
+            <label for="flightDateTime">Date and Time</label>
+            <input id="flightDateTime" type="datetime-local" />
+          </div>
+          <div class="field">
+            <label for="flightType">Operation Type</label>
+            <select id="flightType">
+              <option>Part 107</option>
+              <option>Recreational</option>
+              <option>Training / Test</option>
+            </select>
           </div>
         </div>
-        <div class="action-row">
-          <button class="secondary-btn" onclick="editFlight(${index})">Edit</button>
-          <button class="danger-btn" onclick="deleteFlight(${index})">Delete</button>
+        <div class="row-2">
+          <div class="field">
+            <label for="aircraft">Aircraft</label>
+            <input id="aircraft" list="aircraftList" placeholder='Example: 5" Pirat Punch' />
+            <datalist id="aircraftList"></datalist>
+          </div>
+          <div class="field">
+            <label for="purpose">Purpose</label>
+            <input id="purpose" list="purposeList" placeholder="Inspection, training, real estate, freestyle, test flight" />
+            <datalist id="purposeList"></datalist>
+          </div>
         </div>
-      </div>`;
-  });
+        <div class="row-2">
+          <div class="field">
+            <label for="location">Location</label>
+            <input id="location" placeholder="Address, field name, or site" />
+          </div>
+          <div class="field">
+            <label for="gps">GPS / Coordinates</label>
+            <input id="gps" placeholder="Optional" />
+          </div>
+        </div>
+        <div class="row-3">
+          <div class="field">
+            <label for="durationMinutes">Flight Duration (min)</label>
+            <input id="durationMinutes" type="number" inputmode="decimal" min="0" step="0.1" placeholder="6.5" />
+          </div>
+          <div class="field">
+            <label for="batteryName">Battery Used</label>
+            <input id="batteryName" list="batteryList" placeholder="6S 1500 Pack A" />
+            <datalist id="batteryList"></datalist>
+          </div>
+          <div class="field">
+            <label for="batteryCycles">Battery Cycle Count</label>
+            <input id="batteryCycles" type="number" inputmode="numeric" min="0" step="1" placeholder="Optional" />
+          </div>
+        </div>
+        <div class="row-3">
+          <div class="field">
+            <label for="weather">Weather</label>
+            <input id="weather" placeholder="Calm, 5-10 mph wind, overcast" />
+          </div>
+          <div class="field">
+            <label for="airspace">Airspace / Authorization</label>
+            <input id="airspace" placeholder="LAANC approved, Class G, FRIA, etc." />
+          </div>
+          <div class="field">
+            <label for="jobClient">Job / Client</label>
+            <input id="jobClient" placeholder="Optional" />
+          </div>
+        </div>
+        <div class="row-3">
+          <div class="field">
+            <label for="visualObserver">Visual Observer / Crew</label>
+            <input id="visualObserver" placeholder="Optional" />
+          </div>
+          <div class="field">
+            <label for="preflight">Preflight Check</label>
+            <select id="preflight">
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="maintenanceFlag">Maintenance Needed?</label>
+            <select id="maintenanceFlag">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="notes">Flight Notes / Anomalies</label>
+          <textarea id="notes" placeholder="Anything weird, client info, tuning notes, near misses, weather changes, damage, etc."></textarea>
+        </div>
+        <div class="actions">
+          <button class="primary" id="saveFlightBtn">Save Flight</button>
+          <button class="secondary" id="cancelFlightBtn" style="display:none;">Cancel</button>
+        </div>
+        <p class="hint">This version migrates your old simple logs into the new format so you do not lose prior entries.</p>
+      </div>
 
-  history.innerHTML = html;
-}
+      <div class="card">
+        <h2>Flight History</h2>
+        <div id="flightHistory"></div>
+      </div>
+    </div>
 
-function toggleHistory() {
-  document.getElementById("historyWrap").classList.toggle("open");
-}
+    <div class="panel" id="panel-batteries">
+      <div class="card">
+        <h2 id="batteryFormTitle">Add Battery</h2>
+        <div class="row-2">
+          <div class="field"><label for="batteryLabel">Battery Name</label><input id="batteryLabel" placeholder="6S 1500 Pack A" /></div>
+          <div class="field"><label for="batteryAircraft">Assigned Aircraft</label><input id="batteryAircraft" placeholder='Example: 5" Pirat Punch' /></div>
+        </div>
+        <div class="row-3">
+          <div class="field"><label for="batterySpec">Specs</label><input id="batterySpec" placeholder="6S 1500mAh" /></div>
+          <div class="field"><label for="batteryCycleInput">Cycle Count</label><input id="batteryCycleInput" type="number" min="0" step="1" /></div>
+          <div class="field"><label for="batteryIR">IR / Health</label><input id="batteryIR" placeholder="Optional" /></div>
+        </div>
+        <div class="field"><label for="batteryNotes">Battery Notes</label><textarea id="batteryNotes" placeholder="Cell drift, puffing, retired, good pack, etc."></textarea></div>
+        <div class="actions">
+          <button class="primary" id="saveBatteryBtn">Save Battery</button>
+          <button class="secondary" id="cancelBatteryBtn" style="display:none;">Cancel</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Battery Tracker</h2>
+        <div id="batteryHistory"></div>
+      </div>
+    </div>
 
-function exportData() {
-  let blob = new Blob([JSON.stringify(logs, null, 2)], {type:"application/json"});
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "fpv-log.json";
-  a.click();
+    <div class="panel" id="panel-maintenance">
+      <div class="card">
+        <h2 id="maintenanceFormTitle">Add Maintenance Entry</h2>
+        <div class="row-2">
+          <div class="field"><label for="maintDate">Date</label><input id="maintDate" type="date" /></div>
+          <div class="field"><label for="maintAircraft">Aircraft</label><input id="maintAircraft" placeholder='Example: 5" Pirat Punch' /></div>
+        </div>
+        <div class="row-2">
+          <div class="field"><label for="maintType">Type</label><input id="maintType" placeholder="Repair, prop swap, firmware, inspection" /></div>
+          <div class="field"><label for="maintStatus">Status</label>
+            <select id="maintStatus"><option>Open</option><option>Completed</option><option>Monitor</option></select>
+          </div>
+        </div>
+        <div class="field"><label for="maintDetails">Details</label><textarea id="maintDetails" placeholder="What was done, what changed, what still needs watching"></textarea></div>
+        <div class="actions">
+          <button class="primary" id="saveMaintenanceBtn">Save Entry</button>
+          <button class="secondary" id="cancelMaintenanceBtn" style="display:none;">Cancel</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Maintenance Log</h2>
+        <div id="maintenanceHistory"></div>
+      </div>
+    </div>
 
-  localStorage.setItem("lastBackup", Date.now());
-}
+    <div class="panel" id="panel-export">
+      <div class="card">
+        <h2>Export / Backup</h2>
+        <div class="toolbar">
+          <button class="secondary" id="exportJsonBtn">Export JSON</button>
+          <button class="secondary" id="exportCsvBtn">Export Flights CSV</button>
+          <label class="secondary" style="display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            Import JSON<input id="importInput" type="file" accept="application/json" style="display:none;" />
+          </label>
+          <button class="danger" id="clearAllBtn">Clear All Data</button>
+        </div>
+        <div class="hr"></div>
+        <p class="hint">JSON preserves everything. CSV is for sending clean flight logs to clients, insurance, or your own spreadsheet. Clearing data wipes flights, batteries, and maintenance.</p>
+      </div>
+    </div>
+  </div>
 
-function importData() {
-  let input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".json,application/json";
+  <script>
+    const STORAGE_KEY = 'part107-flight-log-pro-v1';
+    const LEGACY_KEYS = ['fpv-simple-flight-log-single-file-v1'];
 
-  input.onchange = e => {
-    let file = e.target.files[0];
-    if (!file) return;
+    const defaultAircraft = ['3" Toothpick', '75mm Whoop', '5" Pirat Punch', '7" Long Range', '10" Freestyle', '13" Freestyle'];
+    const defaultPurposes = ['Practice', 'Training', 'Test Flight', 'Inspection', 'Real Estate', 'Freestyle', 'Roofing', 'Mapping'];
 
-    let reader = new FileReader();
-    reader.onload = () => {
-      try {
-        let imported = JSON.parse(reader.result);
-        if (!Array.isArray(imported)) {
-          alert("Invalid backup file");
-          return;
-        }
+    let data = { version: 1, flights: [], batteries: [], maintenance: [] };
+    let editingFlightId = null;
+    let editingBatteryId = null;
+    let editingMaintenanceId = null;
 
-        logs = imported;
-        saveToStorage();
-        resetForm();
-        update();
-      } catch (err) {
-        alert("Could not import file");
-      }
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      statFlights: $('statFlights'), statHours: $('statHours'), stat107: $('stat107'), statAircraft: $('statAircraft'),
+      flightDateTime: $('flightDateTime'), flightType: $('flightType'), aircraft: $('aircraft'), purpose: $('purpose'),
+      location: $('location'), gps: $('gps'), durationMinutes: $('durationMinutes'), batteryName: $('batteryName'),
+      batteryCycles: $('batteryCycles'), weather: $('weather'), airspace: $('airspace'), jobClient: $('jobClient'),
+      visualObserver: $('visualObserver'), preflight: $('preflight'), maintenanceFlag: $('maintenanceFlag'), notes: $('notes'),
+      saveFlightBtn: $('saveFlightBtn'), cancelFlightBtn: $('cancelFlightBtn'), flightFormTitle: $('flightFormTitle'), flightHistory: $('flightHistory'),
+      batteryLabel: $('batteryLabel'), batteryAircraft: $('batteryAircraft'), batterySpec: $('batterySpec'), batteryCycleInput: $('batteryCycleInput'),
+      batteryIR: $('batteryIR'), batteryNotes: $('batteryNotes'), saveBatteryBtn: $('saveBatteryBtn'), cancelBatteryBtn: $('cancelBatteryBtn'),
+      batteryFormTitle: $('batteryFormTitle'), batteryHistory: $('batteryHistory'),
+      maintDate: $('maintDate'), maintAircraft: $('maintAircraft'), maintType: $('maintType'), maintStatus: $('maintStatus'), maintDetails: $('maintDetails'),
+      saveMaintenanceBtn: $('saveMaintenanceBtn'), cancelMaintenanceBtn: $('cancelMaintenanceBtn'), maintenanceFormTitle: $('maintenanceFormTitle'),
+      maintenanceHistory: $('maintenanceHistory'),
+      importInput: $('importInput')
     };
-    reader.readAsText(file);
-  };
 
-  input.click();
-}
+    function makeId() {
+      return Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
 
-function checkBackupReminder() {
-  let last = localStorage.getItem("lastBackup");
-  if (!last) return;
+    function nowLocalDateTime() {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 16);
+    }
 
-  let days = (Date.now() - last) / (1000 * 60 * 60 * 24);
-  if (days > 7) {
-    alert("⚠️ Backup your logs!");
-  }
-}
+    function todayLocal() {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 10);
+    }
 
-function escapeHtml(text) {
-  return String(text)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
-setNow();
-update();
-</script>
+    function csvEscape(value) {
+      const str = String(value ?? '');
+      if (/[",\n]/.test(str)) return '"' + str.replace(/"/g, '""') + '"';
+      return str;
+    }
 
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function normalizeFlight(f) {
+      const duration = parseFloat(f.durationMinutes ?? f.duration ?? 0);
+      return {
+        id: f.id || makeId(),
+        dateTime: f.dateTime || nowLocalDateTime(),
+        flightType: f.flightType || 'Training / Test',
+        aircraft: f.aircraft || f.drone || 'Unknown Aircraft',
+        purpose: f.purpose || 'Practice',
+        location: f.location || '',
+        gps: f.gps || '',
+        durationMinutes: !Number.isNaN(duration) ? Number(duration).toFixed(1) : '0.0',
+        batteryName: f.batteryName || '',
+        batteryCycles: f.batteryCycles || '',
+        weather: f.weather || '',
+        airspace: f.airspace || '',
+        jobClient: f.jobClient || '',
+        visualObserver: f.visualObserver || '',
+        preflight: f.preflight || 'Yes',
+        maintenanceFlag: f.maintenanceFlag || 'No',
+        notes: f.notes || ''
+      };
+    }
+
+    function normalizeBattery(b) {
+      return {
+        id: b.id || makeId(),
+        label: b.label || '',
+        aircraft: b.aircraft || '',
+        spec: b.spec || '',
+        cycles: String(b.cycles ?? ''),
+        ir: b.ir || '',
+        notes: b.notes || ''
+      };
+    }
+
+    function normalizeMaintenance(m) {
+      return {
+        id: m.id || makeId(),
+        date: m.date || todayLocal(),
+        aircraft: m.aircraft || '',
+        type: m.type || '',
+        status: m.status || 'Open',
+        details: m.details || ''
+      };
+    }
+
+    function migrateLegacy() {
+      for (const key of LEGACY_KEYS) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const logs = Array.isArray(parsed) ? parsed : Array.isArray(parsed.logs) ? parsed.logs : [];
+          if (!logs.length) continue;
+          const migrated = logs.map((log) => normalizeFlight({
+            id: log.id,
+            dateTime: log.dateTime,
+            aircraft: log.drone,
+            location: log.location,
+            durationMinutes: (parseFloat(log.duration || 0) * 60),
+            notes: log.notes || 'Migrated from older simple app',
+            flightType: 'Training / Test',
+            purpose: 'Practice'
+          }));
+          data.flights = [...migrated, ...data.flights].filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i);
+        } catch {}
+      }
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          data = {
+            version: 1,
+            flights: Array.isArray(parsed.flights) ? parsed.flights.map(normalizeFlight) : [],
+            batteries: Array.isArray(parsed.batteries) ? parsed.batteries.map(normalizeBattery) : [],
+            maintenance: Array.isArray(parsed.maintenance) ? parsed.maintenance.map(normalizeMaintenance) : []
+          };
+        }
+      } catch {}
+      migrateLegacy();
+      saveData();
+    }
+
+    function uniqueValues(values) {
+      return [...new Set(values.filter(Boolean).map(v => String(v).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    }
+
+    function renderDatalists() {
+      $('aircraftList').innerHTML = uniqueValues([...defaultAircraft, ...data.flights.map(f => f.aircraft), ...data.batteries.map(b => b.aircraft), ...data.maintenance.map(m => m.aircraft)])
+        .map(v => `<option value="${escapeHtml(v)}"></option>`).join('');
+      $('purposeList').innerHTML = uniqueValues([...defaultPurposes, ...data.flights.map(f => f.purpose)])
+        .map(v => `<option value="${escapeHtml(v)}"></option>`).join('');
+      $('batteryList').innerHTML = uniqueValues(data.batteries.map(b => b.label))
+        .map(v => `<option value="${escapeHtml(v)}"></option>`).join('');
+    }
+
+    function updateStats() {
+      const totalFlights = data.flights.length;
+      const totalMinutes = data.flights.reduce((sum, f) => sum + (parseFloat(f.durationMinutes) || 0), 0);
+      const totalHours = totalMinutes / 60;
+      const part107 = data.flights.filter(f => f.flightType === 'Part 107').length;
+      const aircraftCount = new Set(data.flights.map(f => f.aircraft).filter(Boolean)).size;
+      els.statFlights.textContent = totalFlights;
+      els.statHours.textContent = totalHours.toFixed(1);
+      els.stat107.textContent = part107;
+      els.statAircraft.textContent = aircraftCount;
+    }
+
+    function flightBadges(f) {
+      return [
+        `<span class="pill ${f.preflight === 'Yes' ? 'badge-yes' : 'badge-warn'}">Preflight: ${escapeHtml(f.preflight)}</span>`,
+        `<span class="pill ${f.maintenanceFlag === 'Yes' ? 'badge-warn' : 'badge-no'}">Maintenance: ${escapeHtml(f.maintenanceFlag)}</span>`,
+        `<span class="pill badge-no">${escapeHtml(f.flightType)}</span>`
+      ].join('');
+    }
+
+    function renderFlights() {
+      const list = [...data.flights].sort((a,b) => a.dateTime < b.dateTime ? 1 : -1);
+      if (!list.length) {
+        els.flightHistory.innerHTML = '<div class="empty">No flights logged yet.</div>';
+        return;
+      }
+      els.flightHistory.innerHTML = list.map(f => `
+        <div class="item">
+          <div class="item-top">
+            <div>
+              <div class="item-title">${escapeHtml(f.aircraft)}</div>
+              <div class="meta">${escapeHtml((f.dateTime || '').replace('T', ' '))} · ${escapeHtml(f.durationMinutes)} min · ${escapeHtml(f.location || 'No location')}</div>
+              <div class="small">Purpose: ${escapeHtml(f.purpose || '')}${f.jobClient ? ` · Client: ${escapeHtml(f.jobClient)}` : ''}</div>
+              <div class="small">Battery: ${escapeHtml(f.batteryName || '—')}${f.batteryCycles ? ` · Cycles: ${escapeHtml(f.batteryCycles)}` : ''}${f.airspace ? ` · Airspace: ${escapeHtml(f.airspace)}` : ''}</div>
+              <div class="small">Weather: ${escapeHtml(f.weather || '—')}${f.visualObserver ? ` · Crew: ${escapeHtml(f.visualObserver)}` : ''}${f.gps ? ` · GPS: ${escapeHtml(f.gps)}` : ''}</div>
+              ${f.notes ? `<div class="small" style="margin-top:8px;">Notes: ${escapeHtml(f.notes)}</div>` : ''}
+              <div class="pill-row">${flightBadges(f)}</div>
+            </div>
+            <div class="mini-actions">
+              <button class="secondary" onclick="editFlight('${f.id}')">Edit</button>
+              <button class="danger" onclick="deleteFlight('${f.id}')">Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderBatteries() {
+      const list = [...data.batteries].sort((a,b) => a.label.localeCompare(b.label));
+      if (!list.length) {
+        els.batteryHistory.innerHTML = '<div class="empty">No batteries tracked yet.</div>';
+        return;
+      }
+      els.batteryHistory.innerHTML = list.map(b => `
+        <div class="item">
+          <div class="item-top">
+            <div>
+              <div class="item-title">${escapeHtml(b.label)}</div>
+              <div class="meta">${escapeHtml(b.spec || 'No spec')} · Aircraft: ${escapeHtml(b.aircraft || '—')}</div>
+              <div class="small">Cycles: ${escapeHtml(b.cycles || '—')}${b.ir ? ` · IR/Health: ${escapeHtml(b.ir)}` : ''}</div>
+              ${b.notes ? `<div class="small" style="margin-top:8px;">Notes: ${escapeHtml(b.notes)}</div>` : ''}
+            </div>
+            <div class="mini-actions">
+              <button class="secondary" onclick="editBattery('${b.id}')">Edit</button>
+              <button class="danger" onclick="deleteBattery('${b.id}')">Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderMaintenance() {
+      const list = [...data.maintenance].sort((a,b) => a.date < b.date ? 1 : -1);
+      if (!list.length) {
+        els.maintenanceHistory.innerHTML = '<div class="empty">No maintenance entries yet.</div>';
+        return;
+      }
+      els.maintenanceHistory.innerHTML = list.map(m => `
+        <div class="item">
+          <div class="item-top">
+            <div>
+              <div class="item-title">${escapeHtml(m.aircraft || 'Unknown Aircraft')}</div>
+              <div class="meta">${escapeHtml(m.date)} · ${escapeHtml(m.type || 'Maintenance')}</div>
+              <div class="pill-row"><span class="pill ${m.status === 'Completed' ? 'badge-yes' : m.status === 'Monitor' ? 'badge-warn' : 'badge-no'}">${escapeHtml(m.status)}</span></div>
+              ${m.details ? `<div class="small" style="margin-top:8px;">${escapeHtml(m.details)}</div>` : ''}
+            </div>
+            <div class="mini-actions">
+              <button class="secondary" onclick="editMaintenance('${m.id}')">Edit</button>
+              <button class="danger" onclick="deleteMaintenance('${m.id}')">Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderAll() {
+      renderDatalists();
+      updateStats();
+      renderFlights();
+      renderBatteries();
+      renderMaintenance();
+    }
+
+    function resetFlightForm() {
+      editingFlightId = null;
+      els.flightFormTitle.textContent = 'Add Flight';
+      els.saveFlightBtn.textContent = 'Save Flight';
+      els.cancelFlightBtn.style.display = 'none';
+      els.flightDateTime.value = nowLocalDateTime();
+      els.flightType.value = 'Part 107';
+      els.aircraft.value = '';
+      els.purpose.value = '';
+      els.location.value = '';
+      els.gps.value = '';
+      els.durationMinutes.value = '';
+      els.batteryName.value = '';
+      els.batteryCycles.value = '';
+      els.weather.value = '';
+      els.airspace.value = '';
+      els.jobClient.value = '';
+      els.visualObserver.value = '';
+      els.preflight.value = 'Yes';
+      els.maintenanceFlag.value = 'No';
+      els.notes.value = '';
+    }
+
+    function resetBatteryForm() {
+      editingBatteryId = null;
+      els.batteryFormTitle.textContent = 'Add Battery';
+      els.saveBatteryBtn.textContent = 'Save Battery';
+      els.cancelBatteryBtn.style.display = 'none';
+      els.batteryLabel.value = '';
+      els.batteryAircraft.value = '';
+      els.batterySpec.value = '';
+      els.batteryCycleInput.value = '';
+      els.batteryIR.value = '';
+      els.batteryNotes.value = '';
+    }
+
+    function resetMaintenanceForm() {
+      editingMaintenanceId = null;
+      els.maintenanceFormTitle.textContent = 'Add Maintenance Entry';
+      els.saveMaintenanceBtn.textContent = 'Save Entry';
+      els.cancelMaintenanceBtn.style.display = 'none';
+      els.maintDate.value = todayLocal();
+      els.maintAircraft.value = '';
+      els.maintType.value = '';
+      els.maintStatus.value = 'Open';
+      els.maintDetails.value = '';
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+      document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+      $('panel-' + tab).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+
+    els.saveFlightBtn.addEventListener('click', () => {
+      if (!els.aircraft.value.trim() || !els.durationMinutes.value.trim() || !els.location.value.trim() || !els.flightDateTime.value) {
+        alert('Aircraft, duration, location, and date/time are required.');
+        return;
+      }
+      const minutes = parseFloat(els.durationMinutes.value);
+      if (Number.isNaN(minutes) || minutes <= 0) {
+        alert('Enter a real flight duration in minutes.');
+        return;
+      }
+      const flight = normalizeFlight({
+        id: editingFlightId || makeId(),
+        dateTime: els.flightDateTime.value,
+        flightType: els.flightType.value,
+        aircraft: els.aircraft.value.trim(),
+        purpose: els.purpose.value.trim() || 'Practice',
+        location: els.location.value.trim(),
+        gps: els.gps.value.trim(),
+        durationMinutes: minutes,
+        batteryName: els.batteryName.value.trim(),
+        batteryCycles: els.batteryCycles.value.trim(),
+        weather: els.weather.value.trim(),
+        airspace: els.airspace.value.trim(),
+        jobClient: els.jobClient.value.trim(),
+        visualObserver: els.visualObserver.value.trim(),
+        preflight: els.preflight.value,
+        maintenanceFlag: els.maintenanceFlag.value,
+        notes: els.notes.value.trim()
+      });
+      if (editingFlightId) {
+        data.flights = data.flights.map(f => f.id === editingFlightId ? flight : f);
+      } else {
+        data.flights.unshift(flight);
+      }
+      saveData();
+      renderAll();
+      resetFlightForm();
+    });
+
+    els.saveBatteryBtn.addEventListener('click', () => {
+      if (!els.batteryLabel.value.trim()) {
+        alert('Battery name is required.');
+        return;
+      }
+      const battery = normalizeBattery({
+        id: editingBatteryId || makeId(),
+        label: els.batteryLabel.value.trim(),
+        aircraft: els.batteryAircraft.value.trim(),
+        spec: els.batterySpec.value.trim(),
+        cycles: els.batteryCycleInput.value.trim(),
+        ir: els.batteryIR.value.trim(),
+        notes: els.batteryNotes.value.trim()
+      });
+      if (editingBatteryId) {
+        data.batteries = data.batteries.map(b => b.id === editingBatteryId ? battery : b);
+      } else {
+        data.batteries.unshift(battery);
+      }
+      saveData();
+      renderAll();
+      resetBatteryForm();
+    });
+
+    els.saveMaintenanceBtn.addEventListener('click', () => {
+      if (!els.maintAircraft.value.trim() || !els.maintType.value.trim()) {
+        alert('Aircraft and maintenance type are required.');
+        return;
+      }
+      const entry = normalizeMaintenance({
+        id: editingMaintenanceId || makeId(),
+        date: els.maintDate.value || todayLocal(),
+        aircraft: els.maintAircraft.value.trim(),
+        type: els.maintType.value.trim(),
+        status: els.maintStatus.value,
+        details: els.maintDetails.value.trim()
+      });
+      if (editingMaintenanceId) {
+        data.maintenance = data.maintenance.map(m => m.id === editingMaintenanceId ? entry : m);
+      } else {
+        data.maintenance.unshift(entry);
+      }
+      saveData();
+      renderAll();
+      resetMaintenanceForm();
+    });
+
+    els.cancelFlightBtn.addEventListener('click', resetFlightForm);
+    els.cancelBatteryBtn.addEventListener('click', resetBatteryForm);
+    els.cancelMaintenanceBtn.addEventListener('click', resetMaintenanceForm);
+
+    window.editFlight = (id) => {
+      const f = data.flights.find(x => x.id === id);
+      if (!f) return;
+      editingFlightId = id;
+      els.flightFormTitle.textContent = 'Edit Flight';
+      els.saveFlightBtn.textContent = 'Save Changes';
+      els.cancelFlightBtn.style.display = 'block';
+      els.flightDateTime.value = f.dateTime || nowLocalDateTime();
+      els.flightType.value = f.flightType || 'Part 107';
+      els.aircraft.value = f.aircraft || '';
+      els.purpose.value = f.purpose || '';
+      els.location.value = f.location || '';
+      els.gps.value = f.gps || '';
+      els.durationMinutes.value = f.durationMinutes || '';
+      els.batteryName.value = f.batteryName || '';
+      els.batteryCycles.value = f.batteryCycles || '';
+      els.weather.value = f.weather || '';
+      els.airspace.value = f.airspace || '';
+      els.jobClient.value = f.jobClient || '';
+      els.visualObserver.value = f.visualObserver || '';
+      els.preflight.value = f.preflight || 'Yes';
+      els.maintenanceFlag.value = f.maintenanceFlag || 'No';
+      els.notes.value = f.notes || '';
+      switchTab('flights');
+    };
+
+    window.deleteFlight = (id) => {
+      if (!confirm('Delete this flight?')) return;
+      data.flights = data.flights.filter(x => x.id !== id);
+      saveData();
+      renderAll();
+      if (editingFlightId === id) resetFlightForm();
+    };
+
+    window.editBattery = (id) => {
+      const b = data.batteries.find(x => x.id === id);
+      if (!b) return;
+      editingBatteryId = id;
+      els.batteryFormTitle.textContent = 'Edit Battery';
+      els.saveBatteryBtn.textContent = 'Save Changes';
+      els.cancelBatteryBtn.style.display = 'block';
+      els.batteryLabel.value = b.label || '';
+      els.batteryAircraft.value = b.aircraft || '';
+      els.batterySpec.value = b.spec || '';
+      els.batteryCycleInput.value = b.cycles || '';
+      els.batteryIR.value = b.ir || '';
+      els.batteryNotes.value = b.notes || '';
+      switchTab('batteries');
+    };
+
+    window.deleteBattery = (id) => {
+      if (!confirm('Delete this battery?')) return;
+      data.batteries = data.batteries.filter(x => x.id !== id);
+      saveData();
+      renderAll();
+      if (editingBatteryId === id) resetBatteryForm();
+    };
+
+    window.editMaintenance = (id) => {
+      const m = data.maintenance.find(x => x.id === id);
+      if (!m) return;
+      editingMaintenanceId = id;
+      els.maintenanceFormTitle.textContent = 'Edit Maintenance Entry';
+      els.saveMaintenanceBtn.textContent = 'Save Changes';
+      els.cancelMaintenanceBtn.style.display = 'block';
+      els.maintDate.value = m.date || todayLocal();
+      els.maintAircraft.value = m.aircraft || '';
+      els.maintType.value = m.type || '';
+      els.maintStatus.value = m.status || 'Open';
+      els.maintDetails.value = m.details || '';
+      switchTab('maintenance');
+    };
+
+    window.deleteMaintenance = (id) => {
+      if (!confirm('Delete this maintenance entry?')) return;
+      data.maintenance = data.maintenance.filter(x => x.id !== id);
+      saveData();
+      renderAll();
+      if (editingMaintenanceId === id) resetMaintenanceForm();
+    };
+
+    $('exportJsonBtn').addEventListener('click', () => {
+      const payload = JSON.stringify({ exportedAt: new Date().toISOString(), ...data }, null, 2);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'part107-flight-log-pro-backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    $('exportCsvBtn').addEventListener('click', () => {
+      const headers = ['Date Time','Operation Type','Aircraft','Purpose','Location','GPS','Duration Minutes','Battery','Battery Cycles','Weather','Airspace','Job Client','Visual Observer','Preflight Check','Maintenance Needed','Notes'];
+      const rows = data.flights.map(f => [
+        f.dateTime, f.flightType, f.aircraft, f.purpose, f.location, f.gps, f.durationMinutes, f.batteryName, f.batteryCycles,
+        f.weather, f.airspace, f.jobClient, f.visualObserver, f.preflight, f.maintenanceFlag, f.notes
+      ]);
+      const csv = [headers, ...rows].map(row => row.map(csvEscape).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'part107-flight-log.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    els.importInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          data = {
+            version: 1,
+            flights: Array.isArray(parsed.flights) ? parsed.flights.map(normalizeFlight) : [],
+            batteries: Array.isArray(parsed.batteries) ? parsed.batteries.map(normalizeBattery) : [],
+            maintenance: Array.isArray(parsed.maintenance) ? parsed.maintenance.map(normalizeMaintenance) : []
+          };
+          saveData();
+          renderAll();
+          resetFlightForm();
+          resetBatteryForm();
+          resetMaintenanceForm();
+          alert('Import complete.');
+        } catch {
+          alert('That JSON file is not valid for this app.');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    $('clearAllBtn').addEventListener('click', () => {
+      if (!confirm('Delete all flights, batteries, and maintenance records?')) return;
+      data = { version: 1, flights: [], batteries: [], maintenance: [] };
+      saveData();
+      renderAll();
+      resetFlightForm();
+      resetBatteryForm();
+      resetMaintenanceForm();
+    });
+
+    loadData();
+    renderAll();
+    resetFlightForm();
+    resetBatteryForm();
+    resetMaintenanceForm();
+  </script>
 </body>
 </html>
