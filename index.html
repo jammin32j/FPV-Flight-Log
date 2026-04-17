@@ -392,16 +392,27 @@
     }
 
     function normalizeFlight(f) {
-      const duration = parseFloat(f.durationMinutes ?? f.duration ?? 0);
+      const hasMinutes = f.minutes !== undefined && f.minutes !== null && f.minutes !== '';
+      const hasDurationMinutes = f.durationMinutes !== undefined && f.durationMinutes !== null && f.durationMinutes !== '';
+      const rawMinutes = hasDurationMinutes ? parseFloat(f.durationMinutes) : hasMinutes ? parseFloat(f.minutes) : NaN;
+      const rawDuration = parseFloat(f.duration ?? 0);
+      let minutes = 0;
+
+      if (!Number.isNaN(rawMinutes) && rawMinutes > 0) {
+        minutes = rawMinutes;
+      } else if (!Number.isNaN(rawDuration) && rawDuration > 0) {
+        minutes = rawDuration <= 24 ? rawDuration * 60 : rawDuration;
+      }
+
       return {
         id: f.id || makeId(),
-        dateTime: f.dateTime || nowLocalDateTime(),
+        dateTime: f.dateTime || f.date || nowLocalDateTime(),
         flightType: f.flightType || 'Training / Test',
         aircraft: f.aircraft || f.drone || 'Unknown Aircraft',
         purpose: f.purpose || 'Practice',
         location: f.location || '',
         gps: f.gps || '',
-        durationMinutes: !Number.isNaN(duration) ? Number(duration).toFixed(1) : '0.0',
+        durationMinutes: Number(minutes).toFixed(1),
         batteryName: f.batteryName || '',
         batteryCycles: f.batteryCycles || '',
         weather: f.weather || '',
@@ -883,7 +894,9 @@
           resetFlightForm();
           resetBatteryForm();
           resetMaintenanceForm();
-          alert(`Import complete. Loaded ${data.flights.length} flight(s), ${data.batteries.length} battery record(s), and ${data.maintenance.length} maintenance record(s).`);
+          const importedMinutesTotal = data.flights.reduce((sum, f) => sum + (parseFloat(f.durationMinutes) || 0), 0);
+          const importedHoursTotal = importedMinutesTotal / 60;
+          alert(`Import complete. Loaded ${data.flights.length} flight(s), ${data.batteries.length} battery record(s), and ${data.maintenance.length} maintenance record(s). Total imported flight time: ${importedHoursTotal.toFixed(1)} hours.`);
         } catch {
           alert('That JSON file is not valid for this app.');
         }
