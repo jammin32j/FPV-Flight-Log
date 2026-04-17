@@ -6,6 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#facc15" />
+  <link rel="apple-touch-icon" href="gambit-logo-180.png" />
   <title>Part 107 Flight Log Pro</title>
   <style>
     :root {
@@ -55,6 +56,7 @@
     .row-2 { grid-template-columns: 1fr 1fr; }
     .row-3 { grid-template-columns: repeat(3, 1fr); }
     .actions { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+    .actions-single { display: grid; gap: 10px; grid-template-columns: 1fr; }
     .actions-3 { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
     .panel { display: none; }
     .panel.active { display: block; }
@@ -146,6 +148,10 @@
             <input id="gps" placeholder="Optional" />
           </div>
         </div>
+        <div class="actions-single" style="margin-top:-2px;margin-bottom:14px;">
+          <button class="secondary" id="useCurrentLocationBtn" type="button">Use Current GPS Location</button>
+        </div>
+        <p class="hint" id="gpsStatus" style="margin-top:-4px;"></p>
         <div class="row-3">
           <div class="field">
             <label for="durationMinutes">Flight Duration (min)</label>
@@ -305,7 +311,7 @@
       maintDate: $('maintDate'), maintAircraft: $('maintAircraft'), maintType: $('maintType'), maintStatus: $('maintStatus'), maintDetails: $('maintDetails'),
       saveMaintenanceBtn: $('saveMaintenanceBtn'), cancelMaintenanceBtn: $('cancelMaintenanceBtn'), maintenanceFormTitle: $('maintenanceFormTitle'),
       maintenanceHistory: $('maintenanceHistory'),
-      importInput: $('importInput')
+      importInput: $('importInput'), useCurrentLocationBtn: $('useCurrentLocationBtn'), gpsStatus: $('gpsStatus')
     };
 
     function makeId() {
@@ -337,6 +343,48 @@
       const str = String(value ?? '');
       if (/[",\n]/.test(str)) return '"' + str.replace(/"/g, '""') + '"';
       return str;
+    }
+
+    function setGpsStatus(message) {
+      if (els.gpsStatus) els.gpsStatus.textContent = message || '';
+    }
+
+    async function reverseGeocode(lat, lon) {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+      const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!response.ok) throw new Error('Reverse geocode failed');
+      const payload = await response.json();
+      return payload.display_name || '';
+    }
+
+    async function useCurrentLocation() {
+      if (!navigator.geolocation) {
+        alert('This browser does not support GPS location.');
+        return;
+      }
+      setGpsStatus('Getting your location...');
+      els.useCurrentLocationBtn.disabled = true;
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const lat = Number(position.coords.latitude).toFixed(6);
+        const lon = Number(position.coords.longitude).toFixed(6);
+        const coords = `${lat}, ${lon}`;
+        els.gps.value = coords;
+        try {
+          const address = await reverseGeocode(lat, lon);
+          els.location.value = address || coords;
+          setGpsStatus(address ? 'Current GPS location loaded.' : 'Coordinates loaded. No street address returned.');
+        } catch (error) {
+          if (!els.location.value.trim()) els.location.value = coords;
+          setGpsStatus('Coordinates loaded. Address lookup did not work, so the GPS coordinates were used for location.');
+        } finally {
+          els.useCurrentLocationBtn.disabled = false;
+        }
+      }, (error) => {
+        els.useCurrentLocationBtn.disabled = false;
+        const message = error.code === 1 ? 'Location permission was denied.' : error.code === 2 ? 'Your location could not be determined.' : error.code === 3 ? 'Location request timed out.' : 'Location lookup failed.';
+        setGpsStatus(message);
+        alert(message);
+      }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
     }
 
     function saveData() {
@@ -566,6 +614,7 @@
       els.preflight.value = 'Yes';
       els.maintenanceFlag.value = 'No';
       els.notes.value = '';
+      setGpsStatus('');
     }
 
     function resetBatteryForm() {
@@ -687,6 +736,8 @@
       renderAll();
       resetMaintenanceForm();
     });
+
+    els.useCurrentLocationBtn.addEventListener('click', useCurrentLocation);
 
     els.cancelFlightBtn.addEventListener('click', resetFlightForm);
     els.cancelBatteryBtn.addEventListener('click', resetBatteryForm);
